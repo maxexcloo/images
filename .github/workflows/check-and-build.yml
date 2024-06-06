@@ -1,4 +1,4 @@
-name: Check repositories for new releases and build and push multi-platform Docker images
+name: Check Releases & Build
 
 on:
   push:
