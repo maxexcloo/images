@@ -2,6 +2,8 @@ name: Check Releases & Build
 
 on:
   push:
+    paths:
+      - "**/*"
   schedule:
     - cron: "0 * * * *"
   workflow_dispatch:
@@ -28,7 +30,7 @@ jobs:
       - name: Generate matrix
         id: set-matrix
         run: |
-          DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".*")
+          DIRS=$(find . -maxdepth 1 -mindepth 1 -not -name ".*" -type d)
           FIRST=true
 
           MATRIX="{\"include\":["
@@ -57,7 +59,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check for latest release for ${{ matrix.dir }}
-        id: check_release
         run: |
           if [ "${{ github.event.inputs.bypass_check }}" == "true" ]; then
             echo "NEW_RELEASE=bypass" >> $GITHUB_ENV
