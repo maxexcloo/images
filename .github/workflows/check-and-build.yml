@@ -55,7 +55,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
 
     steps:
-      - name: Checkout this repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Check for latest release for ${{ matrix.dir }}
@@ -122,5 +122,4 @@ jobs:
             linux/amd64
             linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.dir }}:${{ env.NEW_RELEASE }}
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.dir }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ matrix.dir }}
