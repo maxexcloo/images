@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "0 * * * *"
   workflow_dispatch:
+    inputs:
+      bypass_check:
+        default: "false"
+        description: "Bypass New Version Check"
 
 permissions:
   contents: write
@@ -55,23 +59,28 @@ jobs:
       - name: Check for latest release for ${{ matrix.dir }}
         id: check_release
         run: |
-          if [ -f ${{ matrix.dir }}/LATEST_RELEASE ]; then
-            PREVIOUS_RELEASE=$(cat ${{ matrix.dir }}/LATEST_RELEASE)
-            echo "Previous release: $PREVIOUS_RELEASE"
+          if [ "${{ github.event.inputs.bypass_check }}" == "true" ]; then
+            echo "NEW_RELEASE=bypass" >> $GITHUB_ENV
+            echo "Bypassing version check as requested."
           else
-            PREVIOUS_RELEASE=""
-            echo "Previous release: Not Found"
-          fi
+            if [ -f ${{ matrix.dir }}/LATEST_RELEASE ]; then
+              PREVIOUS_RELEASE=$(cat ${{ matrix.dir }}/LATEST_RELEASE)
+              echo "Previous release: $PREVIOUS_RELEASE"
+            else
+              PREVIOUS_RELEASE=""
+              echo "Previous release: Not Found"
+            fi
 
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ matrix.repo }}/releases/latest | jq -r .tag_name)
-          echo "Latest release: $LATEST_RELEASE"
+            LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ matrix.repo }}/releases/latest | jq -r .tag_name)
+            echo "Latest release: $LATEST_RELEASE"
 
-          if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
-            echo "New release detected: $LATEST_RELEASE"
-            echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
-          else
-            echo "No new release."
-            echo "NEW_RELEASE=false" >> $GITHUB_ENV
+            if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
+              echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
+              echo "New release detected: $LATEST_RELEASE"
+            else
+              echo "NEW_RELEASE=false" >> $GITHUB_ENV
+              echo "No new release."
+            fi
           fi
 
       - name: Save the latest release for ${{ matrix.dir }}
