@@ -110,7 +110,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PUSH_TOKEN }}
 
       - name: Build and push multi-platform Docker image for ${{ matrix.dir }}
         if: env.NEW_RELEASE != 'false'
@@ -122,4 +122,5 @@ jobs:
             linux/amd64
             linux/arm64
           tags: |
-            ghcr.io/${{ github.repository }}:${{ matrix.dir }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.dir }}:${{ env.NEW_RELEASE }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.dir }}:latest
