@@ -1,0 +1,113 @@
+name: Check repositories for new releases and build and push multi-platform Docker images
+
+on:
+  push:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  generate-matrix:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".*")
+          FIRST=true
+
+          MATRIX="{\"include\":["
+          for DIR in $DIRS; do
+            REPO=$(cat $DIR/REPO)
+            if [ $FIRST = true ]; then
+              FIRST=false
+            else
+              MATRIX="$MATRIX,"
+            fi
+            MATRIX="$MATRIX{\"dir\":\"${DIR#./}\",\"repo\":\"$REPO\"}"
+          done
+          MATRIX="$MATRIX]}"
+
+          echo "MATRIX=$MATRIX" >> $GITHUB_ENV
+          echo "::set-output name=matrix::$MATRIX"
+
+  check-releases-and-build:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Check for latest release for ${{ matrix.dir }}
+        id: check_release
+        run: |
+          if [ -f ${{ matrix.dir }}/LATEST_RELEASE ]; then
+            PREVIOUS_RELEASE=$(cat ${{ matrix.dir }}/LATEST_RELEASE)
+            echo "Previous release: $PREVIOUS_RELEASE"
+          else
+            PREVIOUS_RELEASE=""
+            echo "Previous release: Not Found"
+          fi
+
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ matrix.repo }}/releases/latest | jq -r .tag_name)
+          echo "Latest release: $LATEST_RELEASE"
+
+          if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
+            echo "New release detected: $LATEST_RELEASE"
+            echo "::set-output name=new_release::$LATEST_RELEASE"
+          else
+            echo "No new release."
+            echo "::set-output name=new_release::false"
+          fi
+
+      - name: Save the latest release for ${{ matrix.dir }}
+        if: steps.check_release.outputs.new_release != "false"
+        run: echo "${{ steps.check_release.outputs.new_release }}" > ${{ matrix.dir }}/LATEST_RELEASE
+
+      - name: Commit the latest release for ${{ matrix.dir }}
+        if: steps.check_release.outputs.new_release != "false"
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add ${{ matrix.dir }}/LATEST_RELEASE
+          git commit -m "Update latest release for ${{ matrix.repo }} to ${{ steps.check_release.outputs.new_release }}"
+          git push
+
+      - name: Set up Docker Buildx
+        if: steps.check_release.outputs.new_release != "false"
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        if: steps.check_release.outputs.new_release != "false"
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: steps.check_release.outputs.new_release != "false"
+        uses: docker/login-action@v3
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+
+      - name: Build and push multi-platform Docker image
+        if: steps.check_release.outputs.new_release != "false"
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.dir }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ github.repository_owner }}/${{ matrix.dir }}:latest,${{ github.repository_owner }}/${{ matrix.dir }}:${{ steps.check_release.outputs.new_release }}
