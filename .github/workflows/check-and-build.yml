@@ -94,6 +94,7 @@ jobs:
           git add ${{ matrix.dir }}/LATEST_RELEASE
           git commit -m "Update latest release for ${{ matrix.repo }} to ${{ env.NEW_RELEASE }}"
           git push
+          true
 
       - name: Set up Docker Buildx
         if: env.NEW_RELEASE != 'false'
