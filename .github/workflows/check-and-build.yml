@@ -87,6 +87,7 @@ jobs:
         run: echo "${{ env.NEW_RELEASE }}" > ${{ matrix.dir }}/LATEST_RELEASE
 
       - name: Commit the latest release for ${{ matrix.dir }}
+        continue-on-error: true
         if: env.NEW_RELEASE != 'false'
         run: |
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -94,7 +95,6 @@ jobs:
           git add ${{ matrix.dir }}/LATEST_RELEASE
           git commit -m "Update latest release for ${{ matrix.repo }} to ${{ env.NEW_RELEASE }}"
           git push
-          true
 
       - name: Set up Docker Buildx
         if: env.NEW_RELEASE != 'false'
