@@ -60,28 +60,26 @@ jobs:
 
       - name: Check for latest release for ${{ matrix.dir }}
         run: |
-          if [ "${{ github.event.inputs.bypass_check }}" == "true" ]; then
-            echo "NEW_RELEASE=bypass" >> $GITHUB_ENV
+          if [ -f ${{ matrix.dir }}/LATEST_RELEASE ]; then
+            PREVIOUS_RELEASE=$(cat ${{ matrix.dir }}/LATEST_RELEASE)
+            echo "Previous release: $PREVIOUS_RELEASE"
+          else
+            PREVIOUS_RELEASE=""
+            echo "Previous release: Not Found"
+          fi
+
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ matrix.repo }}/releases/latest | jq -r .tag_name)
+          echo "Latest release: $LATEST_RELEASE"
+
+          if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
+            echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
+            echo "New release detected: $LATEST_RELEASE"
+          elif [ "${{ github.event.inputs.bypass_check }}" == "true" ]; then
+            echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
             echo "Bypassing version check as requested."
           else
-            if [ -f ${{ matrix.dir }}/LATEST_RELEASE ]; then
-              PREVIOUS_RELEASE=$(cat ${{ matrix.dir }}/LATEST_RELEASE)
-              echo "Previous release: $PREVIOUS_RELEASE"
-            else
-              PREVIOUS_RELEASE=""
-              echo "Previous release: Not Found"
-            fi
-
-            LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ matrix.repo }}/releases/latest | jq -r .tag_name)
-            echo "Latest release: $LATEST_RELEASE"
-
-            if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
-              echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
-              echo "New release detected: $LATEST_RELEASE"
-            else
-              echo "NEW_RELEASE=false" >> $GITHUB_ENV
-              echo "No new release."
-            fi
+            echo "NEW_RELEASE=false" >> $GITHUB_ENV
+            echo "No new release."
           fi
 
       - name: Save the latest release for ${{ matrix.dir }}
