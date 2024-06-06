@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       bypass_check:
-        default: "false"
+        default: "true"
         description: "Bypass New Version Check"
 
 permissions:
