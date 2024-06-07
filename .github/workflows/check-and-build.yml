@@ -31,8 +31,8 @@ jobs:
 
           MATRIX="{\"include\":["
           for DIR in $DIRS; do
-            REPO=$(cat $DIR/REPO)
-            if [ $FIRST = true ]; then
+            REPO=$(cat "$DIR/REPO")
+            if [ "$FIRST" = true ]; then
               FIRST=false
             else
               MATRIX="$MATRIX,"
@@ -56,15 +56,15 @@ jobs:
 
       - name: Check for latest release for ${{ matrix.dir }}
         run: |
-          if [ -f ${{ matrix.dir }}/LATEST_RELEASE ]; then
-            PREVIOUS_RELEASE=$(cat ${{ matrix.dir }}/LATEST_RELEASE)
+          if [ -f "${{ matrix.dir }}/LATEST_RELEASE" ]; then
+            PREVIOUS_RELEASE=$(cat "${{ matrix.dir }}/LATEST_RELEASE")
             echo "Previous release: $PREVIOUS_RELEASE"
           else
             PREVIOUS_RELEASE=""
             echo "Previous release: Not Found"
           fi
 
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ matrix.repo }}/releases/latest | jq -r .tag_name)
+          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${{ matrix.repo }}/releases/latest" | jq -r .tag_name)
           echo "Latest release: $LATEST_RELEASE"
 
           if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
@@ -80,7 +80,7 @@ jobs:
 
       - name: Save the latest release for ${{ matrix.dir }}
         if: env.NEW_RELEASE != 'false'
-        run: echo "${{ env.NEW_RELEASE }}" > ${{ matrix.dir }}/LATEST_RELEASE
+        run: echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
 
       - name: Commit the latest release for ${{ matrix.dir }}
         continue-on-error: true
@@ -88,7 +88,7 @@ jobs:
         run: |
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add ${{ matrix.dir }}/LATEST_RELEASE
+          git add "${{ matrix.dir }}/LATEST_RELEASE"
           git commit -m "Update latest release for ${{ matrix.repo }} to ${{ env.NEW_RELEASE }}"
           git push
 
