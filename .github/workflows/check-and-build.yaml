@@ -54,7 +54,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check for latest release for ${{ matrix.dir }}
+      - name: Check for latest release
         run: |
           if [ -f "${{ matrix.dir }}/LATEST_RELEASE" ]; then
             PREVIOUS_RELEASE=$(cat "${{ matrix.dir }}/LATEST_RELEASE")
@@ -78,11 +78,11 @@ jobs:
             echo "No new release."
           fi
 
-      - name: Save the latest release for ${{ matrix.dir }}
+      - name: Save the latest release
         if: env.NEW_RELEASE != 'false'
         run: echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
 
-      - name: Commit the latest release for ${{ matrix.dir }}
+      - name: Commit the latest release
         continue-on-error: true
         if: env.NEW_RELEASE != 'false'
         run: |
@@ -91,6 +91,23 @@ jobs:
           git add "${{ matrix.dir }}/LATEST_RELEASE"
           git commit -m "Update latest release for ${{ matrix.repo }} to ${{ env.NEW_RELEASE }}"
           git push
+
+      - name: Check for pull flag file
+        run: |
+          if [ -f "${{ matrix.dir }}/PULL" ]; then
+            echo "PULL=true" >> $GITHUB_ENV
+            echo "PULL flag file found, pulling repository."
+          else
+            echo "PULL=false" >> $GITHUB_ENV
+            echo "PULL flag file not found, skipping repository pull."
+          fi
+
+      - name: Checkout repository
+        if: env.PULL != 'false'
+        uses: actions/checkout@v4
+        with:
+          path: ${{ matrix.dir }}
+          repository: ${{ matrix.repo }}
 
       - name: Set up Docker Buildx
         if: env.NEW_RELEASE != 'false'
