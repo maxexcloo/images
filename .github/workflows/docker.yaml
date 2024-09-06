@@ -45,7 +45,7 @@ jobs:
           if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
             echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
             echo "New release detected: $LATEST_RELEASE"
-          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          elif [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "NEW_RELEASE=bypass" >> $GITHUB_ENV
             echo "Bypassing change check due to manual run."
           else
