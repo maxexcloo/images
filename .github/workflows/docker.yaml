@@ -62,14 +62,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add "${{ matrix.dir }}/LATEST_RELEASE"
-          git commit -m "Update latest release for ${{ steps.get-repo.outputs.repo }} to ${{ env.NEW_RELEASE }}"
+          git commit -m "Update latest release for ${{ steps.get-config.outputs.repo }} to ${{ env.NEW_RELEASE }}"
           git push
       - name: Checkout repository
         if: env.PULL != 'false'
         uses: actions/checkout@v4
         with:
           path: ${{ matrix.dir }}
-          repository: ${{ steps.get-repo.outputs.repo }}
+          repository: ${{ steps.get-config.outputs.repo }}
       - name: Set up Docker Buildx
         if: env.NEW_RELEASE != 'false'
         uses: docker/setup-buildx-action@v3
