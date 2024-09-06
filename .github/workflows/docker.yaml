@@ -2,8 +2,6 @@ name: Build Docker Images
 
 on:
   push:
-    paths:
-      - "**/*"
   schedule:
     - cron: "0 * * * *"
   workflow_dispatch:
@@ -28,7 +26,7 @@ jobs:
           echo "matrix=$DIRS" >> $GITHUB_OUTPUT
 
   build:
-    if: ${{ fromJson(needs.generate-matrix.outputs.matrix)[0] }}
+    if: needs.generate-matrix.outputs.matrix != '[]'
     name: Build Docker Image
     needs: generate-matrix
     runs-on: ubuntu-latest
