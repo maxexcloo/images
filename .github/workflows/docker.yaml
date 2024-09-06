@@ -42,8 +42,11 @@ jobs:
         run: |
           LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${{ steps.get-config.outputs.repo }}/releases/latest" | jq -r .tag_name)
           [ -f "${{ matrix.dir }}/LATEST_RELEASE" ] && PREVIOUS_RELEASE=$(cat "${{ matrix.dir }}/LATEST_RELEASE") || PREVIOUS_RELEASE=""
+          echo "PUSH=false" >> $GITHUB_ENV
           if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
+            echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
             echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
+            echo "PUSH=true" >> $GITHUB_ENV
             echo "New release detected: $LATEST_RELEASE"
           elif [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "NEW_RELEASE=bypass" >> $GITHUB_ENV
@@ -52,10 +55,9 @@ jobs:
             echo "NEW_RELEASE=false" >> $GITHUB_ENV
             echo "No new release."
           fi
-          echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
       - name: Commit the latest release
         continue-on-error: true
-        if: env.NEW_RELEASE != 'false'
+        if: env.PUSH != 'false'
         run: |
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
