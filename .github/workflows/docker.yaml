@@ -44,7 +44,7 @@ jobs:
           [ -f "${{ matrix.dir }}/LATEST_RELEASE" ] && PREVIOUS_RELEASE=$(cat "${{ matrix.dir }}/LATEST_RELEASE") || PREVIOUS_RELEASE=""
           echo "PUSH=false" >> $GITHUB_ENV
           if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
-            echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
+            echo "${{ env.LATEST_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
             echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
             echo "PUSH=true" >> $GITHUB_ENV
             echo "New release detected: $LATEST_RELEASE"
