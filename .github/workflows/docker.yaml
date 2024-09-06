@@ -24,7 +24,7 @@ jobs:
       - name: Generate matrix
         id: generate-matrix
         run: |
-          DIRS=$(find . -maxdepth 1 -mindepth 1 -not -name ".*" -printf '%f\n' | jq -c -s -R 'split("\n")[:-1]')
+          DIRS=$(find . -maxdepth 1 -mindepth 1 -type d -not -name ".*" -printf '%f\n' | jq -c -s -R 'split("\n")[:-1]')
           echo "matrix=$DIRS" >> $GITHUB_OUTPUT
 
   build:
