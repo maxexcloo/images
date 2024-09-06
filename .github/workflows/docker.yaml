@@ -1,4 +1,4 @@
-name: Check Releases & Build
+name: Build Docker Images
 
 on:
   push:
@@ -15,58 +15,35 @@ permissions:
 jobs:
   generate-matrix:
     name: Generate Matrix
+    runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ env.MATRIX }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout this repository
-        uses: actions/checkout@v4
-
-      - name: Generate matrix
-        id: set-matrix
-        run: |
-          DIRS=$(find . -maxdepth 1 -mindepth 1 -not -name ".*" -type d)
-          FIRST=true
-
-          MATRIX="{\"include\":["
-          for DIR in $DIRS; do
-            REPO=$(cat "$DIR/REPO")
-            if [ "$FIRST" = true ]; then
-              FIRST=false
-            else
-              MATRIX="$MATRIX,"
-            fi
-            MATRIX="$MATRIX{\"dir\":\"${DIR#./}\",\"repo\":\"$REPO\"}"
-          done
-          MATRIX="$MATRIX]}"
-
-          echo "MATRIX=$MATRIX" >> $GITHUB_ENV
-
-  check-releases-and-build:
-    name: Check Releases & Build
-    needs: generate-matrix
-    runs-on: ubuntu-latest
-    strategy:
-      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-
+      matrix: ${{ steps.generate-matrix.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Generate matrix
+        id: generate-matrix
+        run: |
+          DIRS=$(find . -maxdepth 1 -mindepth 1 -not -name ".*" -printf '%f\n' | jq -c -s -R 'split("\n")[:-1]')
+          echo "matrix=$DIRS" >> $GITHUB_OUTPUT
 
+  build:
+    if: ${{ fromJson(needs.generate-matrix.outputs.matrix)[0] }}
+    name: Build Docker Image
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Get config for directory
+        id: get-config
+        run: |
+          [ -f "${{ matrix.dir }}/PULL" ] && echo "PULL=true" >> $GITHUB_ENV || echo "PULL=false" >> $GITHUB_ENV
+          echo "repo=$(cat "${{ matrix.dir }}/REPO")" >> $GITHUB_OUTPUT
       - name: Check for latest release
         run: |
-          if [ -f "${{ matrix.dir }}/LATEST_RELEASE" ]; then
-            PREVIOUS_RELEASE=$(cat "${{ matrix.dir }}/LATEST_RELEASE")
-            echo "Previous release: $PREVIOUS_RELEASE"
-          else
-            PREVIOUS_RELEASE=""
-            echo "Previous release: Not Found"
-          fi
-
-          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${{ matrix.repo }}/releases/latest" | jq -r .tag_name)
-          echo "Latest release: $LATEST_RELEASE"
-
+          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${{ steps.get-config.outputs.repo }}/releases/latest" | jq -r .tag_name)
+          [ -f "${{ matrix.dir }}/LATEST_RELEASE" ] && PREVIOUS_RELEASE=$(cat "${{ matrix.dir }}/LATEST_RELEASE") || PREVIOUS_RELEASE=""
           if [ "$LATEST_RELEASE" != "$PREVIOUS_RELEASE" ]; then
             echo "NEW_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
             echo "New release detected: $LATEST_RELEASE"
@@ -77,11 +54,7 @@ jobs:
             echo "NEW_RELEASE=false" >> $GITHUB_ENV
             echo "No new release."
           fi
-
-      - name: Save the latest release
-        if: env.NEW_RELEASE != 'false'
-        run: echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
-
+          echo "${{ env.NEW_RELEASE }}" > "${{ matrix.dir }}/LATEST_RELEASE"
       - name: Commit the latest release
         continue-on-error: true
         if: env.NEW_RELEASE != 'false'
@@ -89,34 +62,20 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add "${{ matrix.dir }}/LATEST_RELEASE"
-          git commit -m "Update latest release for ${{ matrix.repo }} to ${{ env.NEW_RELEASE }}"
+          git commit -m "Update latest release for ${{ steps.get-repo.outputs.repo }} to ${{ env.NEW_RELEASE }}"
           git push
-
-      - name: Check for pull flag file
-        run: |
-          if [ -f "${{ matrix.dir }}/PULL" ]; then
-            echo "PULL=true" >> $GITHUB_ENV
-            echo "PULL flag file found, pulling repository."
-          else
-            echo "PULL=false" >> $GITHUB_ENV
-            echo "PULL flag file not found, skipping repository pull."
-          fi
-
       - name: Checkout repository
         if: env.PULL != 'false'
         uses: actions/checkout@v4
         with:
           path: ${{ matrix.dir }}
-          repository: ${{ matrix.repo }}
-
+          repository: ${{ steps.get-repo.outputs.repo }}
       - name: Set up Docker Buildx
         if: env.NEW_RELEASE != 'false'
         uses: docker/setup-buildx-action@v3
-
       - name: Set up QEMU
         if: env.NEW_RELEASE != 'false'
         uses: docker/setup-qemu-action@v3
-
       - name: Login to GitHub Container Registry
         if: env.NEW_RELEASE != 'false'
         uses: docker/login-action@v3
@@ -124,7 +83,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PUSH_TOKEN }}
-
       - name: Build and push multi-platform Docker image for ${{ matrix.dir }}
         if: env.NEW_RELEASE != 'false'
         uses: docker/build-push-action@v5
@@ -137,3 +95,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.dir }}:${{ env.NEW_RELEASE }}
             ghcr.io/${{ github.repository_owner }}/${{ matrix.dir }}:latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        dir: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
