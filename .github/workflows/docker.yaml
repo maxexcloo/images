@@ -13,7 +13,7 @@ permissions:
 jobs:
   generate-matrix:
     name: Generate Matrix
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, au-mini]
     outputs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
     steps:
@@ -29,7 +29,7 @@ jobs:
     if: needs.generate-matrix.outputs.matrix != '[]'
     name: Build Docker Image
     needs: generate-matrix
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, au-mini]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
