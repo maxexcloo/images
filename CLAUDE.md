@@ -8,10 +8,11 @@
 ```bash
 # Development
 docker build -t image-name ./image-dir    # Build image locally
-docker run -it image-name /bin/sh          # Test image
+# No tests configured                      # Run tests
+docker build -t test-image ./image-dir    # Check/fix code quality
 
 # Build
-# Automated via GitHub Actions on push
+# Automated via GitHub Actions on push     # Build for production
 ```
 
 ## Tech Stack
@@ -58,6 +59,7 @@ docker run -it image-name /bin/sh          # Test image
 ## Git Workflow
 ```bash
 # After every change
+docker build -t test-image ./image-dir && echo "Quality check complete"
 git add . && git commit -m "type: description"
 
 # Always commit after verified working changes
