@@ -1,29 +1,14 @@
 # CLAUDE.md - Development Guide
 
 ## Project Overview
-**Purpose**: Custom Docker images for services with automated builds and releases  
+**Purpose**: Custom Docker images for services with automated builds and multi-architecture support
 **Status**: Active
-
-## Commands
-```bash
-# Development
-docker build -t image-name ./image-dir    # Build image locally
-# No tests configured                      # Run tests
-docker build -t test-image ./image-dir    # Check/fix code quality
-
-# Build
-# Automated via GitHub Actions on push     # Build for production
-```
-
-## Tech Stack
-- **Language**: Dockerfile
-- **Framework**: Docker
-- **Testing**: Manual testing with docker run
+**Language**: Dockerfile
 
 ## Code Standards
 
 ### Organization
-- **Config/Data**: Alphabetical and recursive (imports, dependencies, object keys)
+- **Config/Data**: Alphabetical and recursive (imports, dependencies, object keys, mise tasks)
 - **Documentation**: Sort sections, lists, and references alphabetically when logical
 - **Files**: Alphabetical in documentation and directories
 - **Functions**: Group by purpose, alphabetical within groups
@@ -31,41 +16,90 @@ docker build -t test-image ./image-dir    # Check/fix code quality
 
 ### Quality
 - **Comments**: Minimal - only for complex business logic
-- **Documentation**: Update README.md and docs with every feature change
-- **Formatting**: Run formatter before commits
+- **Documentation**: Update ARCHITECTURE.md and README.md with every feature change
+- **Error handling**: Graceful container failure with meaningful exit codes
+- **Formatting**: Run `mise run fmt` before commits
 - **KISS principle**: Keep it simple - prefer readable code over clever code
 - **Naming**: kebab-case for image names and directories
+- **Testing**: Manual testing with docker build and run
 - **Trailing newlines**: Required in all files
 
-## Project Structure
-- **caddy/**: Custom Caddy image with additional modules
-- **gatus/**: Custom Gatus monitoring image
-- **LATEST_RELEASE**: Release tracking files
-- **REPO**: Repository reference files
+## Commands
+```bash
+# Build
+mise run build           # Build all Docker images
 
-## Project Specs
-- **Automated builds**: GitHub Actions trigger on directory changes
-- **Multi-arch support**: Built for linux/amd64 and linux/arm64
-- **Release tracking**: LATEST_RELEASE files track current versions
-- **Repository links**: REPO files contain upstream repository URLs
+# Development
+mise run dev             # Development validation cycle
+
+# Format
+mise run fmt             # Format Dockerfile and config files
+
+# Check
+mise run check           # All validation (fmt + build + test)
+
+# Test
+mise run test            # Test all Docker images
+```
+
+## Development Guidelines
+
+### Contribution Standards
+- **Code Changes**: Follow sorting rules and maintain Docker best practices
+- **Documentation**: Keep all docs synchronized and cross-referenced
+- **Feature Changes**: Update README.md and ARCHITECTURE.md when adding features
+
+### Documentation Structure
+- **ARCHITECTURE.md**: Technical design and implementation details
+- **CLAUDE.md**: Development standards and project guidelines
+- **README.md**: Tool overview and usage guide
+
+## Container Interface Standards
+- **Clear responses**: Provide meaningful HTTP status codes and error messages
+- **Consistent ports**: Use standard ports for services where applicable
+- **Error messages**: Include container context and timestamps in logs
+- **Health checks**: Always include health endpoints where applicable
+
+## Development Workflow Standards
+
+### Environment Management
+- Use **mise** for consistent development environments
+- Define common tasks as mise scripts in `.mise.toml`
+- Pin tool versions in `.mise.toml`
+
+## Error Handling Standards
+- **Contextual errors**: Include container and service context in logs
+- **Graceful degradation**: Handle upstream service failures gracefully
+- **Informative messages**: Clear error responses for debugging
+- **User-friendly output**: Meaningful exit codes and error messages
+
+### Required Development Tasks
+- **build**: Build all Docker images
+- **check**: All validation (fmt + build + test)
+- **dev**: Development validation cycle
+- **fmt**: Format Dockerfile and config files
+- **test**: Test all Docker images
+
+## Project Structure
+- **caddy/**: Enhanced Caddy web server with Cloudflare DNS and Docker proxy plugins
+- **gatus/**: Health monitoring service with Tailscale integration
+- ***/Dockerfile**: Multi-stage Docker build definitions
+- ***/LATEST_RELEASE**: Version tracking for automated updates
+- ***/REPO**: Upstream repository references
 
 ## README Guidelines
-- **Structure**: Title → Description → Quick Start → Features → Installation → Usage → Contributing
-- **Badges**: Include relevant status badges (build, version, license)
+- **Badges**: Include relevant status badges (license, status, docker, language)
 - **Code examples**: Always include working examples in code blocks
 - **Installation**: Provide copy-paste commands that work
 - **Quick Start**: Get users running in under 5 minutes
+- **Structure**: Title → Badges → Description → Quick Start → Features → Installation → Usage → Contributing
 
-## Git Workflow
-```bash
-# After every change
-docker build -t test-image ./image-dir && echo "Quality check complete"
-git add . && git commit -m "type: description"
-
-# Always commit after verified working changes
-# Keep commits small and focused
-```
+## Tech Stack
+- **Backend**: Docker multi-stage builds
+- **CI/CD**: GitHub Actions with multi-architecture support
+- **Registry**: GitHub Container Registry (ghcr.io)
+- **Testing**: Manual testing with docker build and run
 
 ---
 
-*Simple context for AI assistants working on this open source project.*
+*Development guide for the images open source project.*

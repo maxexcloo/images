@@ -2,6 +2,8 @@
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active-success)](https://img.shields.io/badge/status-active-success)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://github.com/maxexcloo/images/pkgs/container/caddy)
+[![Dockerfile](https://img.shields.io/badge/dockerfile-blue.svg)](Dockerfile)
 
 Custom Docker images for personal infrastructure deployment with automated builds and multi-architecture support.
 
@@ -59,7 +61,7 @@ Each image directory contains:
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
 3. Make changes following the code standards in CLAUDE.md
-4. Test image builds locally: `docker build -t test-image ./image-dir`
+4. Build and test: `mise run check`
 5. Submit a pull request
 
 ## License
