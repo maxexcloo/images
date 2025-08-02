@@ -1,4 +1,4 @@
-# CLAUDE.md - Development Guide
+# AGENTS.md - Development Guide
 
 ## Project Overview
 **Purpose**: Custom Docker images for services with automated builds and multi-architecture support
