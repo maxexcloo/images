@@ -17,7 +17,7 @@ jobs:
       gatus: ${{ steps.changes.outputs.gatus }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -42,7 +42,7 @@ jobs:
     if: needs.detect-changes.outputs.caddy == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -82,7 +82,7 @@ jobs:
     if: needs.detect-changes.outputs.gatus == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
