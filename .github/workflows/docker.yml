@@ -67,7 +67,7 @@ jobs:
             type=raw,value={{date 'YYYY.MM.DD'}},enable={{is_default_branch}}
 
       - name: Build & Push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./caddy
           labels: ${{ steps.meta.outputs.labels }}
@@ -107,7 +107,7 @@ jobs:
             type=raw,value={{date 'YYYY.MM.DD'}},enable={{is_default_branch}}
 
       - name: Build & Push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gatus
           labels: ${{ steps.meta.outputs.labels }}

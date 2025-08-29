@@ -85,7 +85,7 @@ jobs:
           password: ${{ secrets.PUSH_TOKEN }}
       - name: Build and push multi-platform Docker image for ${{ matrix.dir }}
         if: env.NEW_RELEASE != 'false'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.dir }}
           push: true
