@@ -18,7 +18,7 @@ jobs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Generate matrix
         id: generate-matrix
         run: |
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Get config for directory
         id: get-config
         run: |
@@ -66,7 +66,7 @@ jobs:
           git push
       - name: Checkout repository
         if: env.PULL != 'false'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: ${{ matrix.dir }}
           repository: ${{ steps.get-config.outputs.repo }}
