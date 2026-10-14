@@ -4,18 +4,7 @@ python = "3.15.0"
 updatecli = "0.122.1"
 uv = "0.13.1"
 
-[tasks.build]
-description = "Build Active Images For The Local Architecture"
-run = "python .github/scripts/image.py build"
-
-[tasks.check]
-description = "Validate Configuration & Build Active Images"
-run = """
-updatecli manifest validate --config .updatecli.d --disable-templating --strict
-mise fmt --check
-actionlint -shellcheck="" .github/workflows/container.yaml
-python .github/scripts/image.py build
-"""
+# Dependency Updates
 
 [tasks."dependencies:check"]
 description = "Preview Local Dependency Updates"
@@ -36,6 +25,21 @@ if [ -n "${usage_labels:-}" ]; then
   set -- --labels "$usage_labels"
 fi
 updatecli pipeline apply --config .updatecli.d --disable-changelog --disable-udash-report --unique-tmp-dir "$@"
+"""
+
+# Development
+
+[tasks.build]
+description = "Build Active Images For The Local Architecture"
+run = "python .github/scripts/image.py build"
+
+[tasks.check]
+description = "Validate Configuration & Build Active Images"
+run = """
+updatecli manifest validate --config .updatecli.d --disable-templating --strict
+mise fmt --check
+actionlint -shellcheck="" .github/workflows/container.yaml
+python .github/scripts/image.py build
 """
 
 [tasks.fmt]
