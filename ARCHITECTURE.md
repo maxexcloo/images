@@ -5,7 +5,7 @@
 Active image directories contain packaging and verification files. `source.json`
 records the upstream repository, reference and immutable commit. Builds receive
 that revision as a named `upstream` context; application code is not copied into
-this repository. Renovate proposes revision updates for manual review.
+this repository. Updatecli previews revision updates locally for manual review.
 
 Atvloadly packages upstream v0.6.2 with local pairing completion and discovery
 refresh patches and a pinned Go dependency security patch. Runtime OS packages
@@ -35,8 +35,3 @@ are retained. Provenance, SBOMs and licence metadata accompany published images.
 
 Local Mise checks run the same recipes and smoke tests on the host architecture.
 Remote CI establishes both architecture support and registry publishing.
-
-## Legacy Recipes
-
-Caddy and Gatus recipes are retained as legacy files. They are excluded from
-active recipe discovery and Renovate updates.

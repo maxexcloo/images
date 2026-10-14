@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://www.updatecli.io/schema/latest/policy/manifest/config.json
+name: Update atvloadly Source
+pipelineid: update-atvloadly-source
+labels:
+  group: sources
+sources:
+  reference:
+    kind: json
+    spec:
+      file: atvloadly/source.json
+      key: reference
+      engine: dasel/v3
+  release:
+    kind: githubrelease
+    spec:
+      owner: bitxeno
+      repository: atvloadly
+      token: '{{ env "GITHUB_TOKEN" }}'
+      versionfilter:
+        kind: semver
+        pattern: "*"
+  repository:
+    kind: json
+    spec:
+      file: atvloadly/source.json
+      key: repository
+      engine: dasel/v3
+  revision:
+    kind: shell
+    spec:
+      command: |-
+        set -eu
+        revision=$(git ls-remote --exit-code https://github.com/{{ source "repository" }}.git refs/tags/{{ source "release" }} refs/tags/{{ source "release" }}'^{}' | tail -n 1 | cut -f 1)
+        test -n "$revision"
+        printf '%s\n' "$revision"
+targets:
+  reference:
+    kind: json
+    sourceid: release
+    spec:
+      file: atvloadly/source.json
+      key: reference
+      engine: dasel/v3
+  revision:
+    kind: json
+    sourceid: revision
+    spec:
+      file: atvloadly/source.json
+      key: revision
+      engine: dasel/v3
+  runtime:
+    kind: file
+    sourceid: release
+    spec:
+      file: atvloadly/Dockerfile
+      matchpattern: (?m)^(ARG ATVLOADLY_VERSION=)v?[0-9.]+$
+      replacepattern: ${1}{{ source "release" }}
