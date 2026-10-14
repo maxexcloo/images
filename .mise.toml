@@ -1,7 +1,8 @@
 [tools]
 actionlint = "1.7.12"
 python = "3.15.0"
-uv = "0.13.0"
+updatecli = "0.122.1"
+uv = "0.13.1"
 
 [tasks.build]
 description = "Build Active Images For The Local Architecture"
@@ -10,14 +11,11 @@ run = "python scripts/image.py build"
 [tasks.check]
 description = "Validate Workflows, Build Active Images & Test Their Runtimes"
 run = """
+updatecli manifest validate --config .updatecli.d --disable-templating --strict
 mise fmt --check
 actionlint -shellcheck="" .github/workflows/container.yaml
 python scripts/image.py check
 """
-
-[tasks.dev]
-description = "Run The Development Checks"
-depends = ["check"]
 
 [tasks.fmt]
 description = "Format The Mise Configuration"
@@ -26,3 +24,25 @@ run = "mise fmt"
 [tasks.test]
 description = "Test Locally Built Images"
 run = "python scripts/image.py test"
+
+# Dependency Updates
+[tasks."dependencies:check"]
+description = "Preview Local Dependency Updates"
+run = """
+GITHUB_TOKEN="$(gh auth token)"
+export GITHUB_TOKEN
+updatecli pipeline diff --config .updatecli.d --disable-changelog --disable-udash-report --unique-tmp-dir
+"""
+
+[tasks."dependencies:update"]
+description = "Apply Reviewed Local Dependency Updates"
+usage = 'flag "--labels <labels>" help="Select Updatecli groups, such as group:tools"'
+run = """
+GITHUB_TOKEN="$(gh auth token)"
+export GITHUB_TOKEN
+set --
+if [ -n "${usage_labels:-}" ]; then
+  set -- --labels "$usage_labels"
+fi
+updatecli pipeline apply --config .updatecli.d --disable-changelog --disable-udash-report --unique-tmp-dir "$@"
+"""

@@ -18,9 +18,6 @@ Each directory owns its Dockerfile, smoke test and pinned `source.json`.
 BetterBench also owns its Python dependency lockfile. Application source is fetched
 as a named BuildKit context at the exact configured commit.
 
-Caddy and Gatus recipes remain as legacy files. Their former workflows have been removed;
-this repository does not build or publish them.
-
 ## Development
 
 Docker with Buildx is required. Install the pinned tools and verify the host architecture.
@@ -68,7 +65,7 @@ The repository needs Write access under each existing GHCR package's
 **Settings → Manage Actions Access**. Publishing uses `GITHUB_TOKEN`.
 The package names stay unchanged when moving from the application forks.
 
-Renovate proposes source and build dependency updates for manual review. When
+Updatecli previews source and build dependency updates locally for manual review. When
 BetterBench's dependency metadata changes, refresh its lockfile against the
 new pinned source before merging:
 
@@ -81,3 +78,22 @@ mise exec -- python scripts/image.py lock betterbench
 Build infrastructure uses AGPL-3.0; application sources retain their upstream
 licences: Apache-2.0 for BetterBench and Gatus, BSD-3-Clause for Tailscale,
 GPL-3.0 for ComfyUI, and AGPL-3.0-only for Atvloadly and Redlib.
+
+## Dependency Updates
+
+Mise installs the pinned Updatecli CLI. Run `mise run dependencies:check` locally
+to preview updates from `.updatecli.d/`. GitHub authentication uses the existing
+`gh` login; credentials stay in the command process.
+
+Review compatibility and major upgrades separately, then apply a selected group:
+
+```sh
+mise run dependencies:update --labels group:tools
+```
+
+Use the groups declared in the policy, review the Git diff and run the project
+checks before committing or deploying. Updatecli changes local files; it does
+not create issues, pull requests, commits or deployments. Hosted Renovate is disabled.
+
+After changing the BetterBench source, refresh its lockfile with
+`mise exec -- python scripts/image.py lock betterbench` before building.

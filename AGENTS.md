@@ -2,12 +2,12 @@
 
 ## Build Ownership
 
-- Active recipes have a `source.json`; Caddy and Gatus recipes are retained legacy files and must not publish.
+- Active recipes have a `source.json`.
 - Pin upstream source revisions. Keep application source in its upstream repository.
 - Preserve upstream licences and include application licence metadata in published images.
 - Build each recipe’s configured architectures on native runners; the default is AMD64 and ARM64. ComfyUI ROCm is AMD64 only. Test and scan each image before publishing.
 - Keep existing GHCR package names. Publish only from `main`; pull requests only build and test.
-- Keep source updates manual through Renovate review.
+- Keep source updates manual through local Updatecli review.
 
 ## Documentation
 

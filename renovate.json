@@ -1,37 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "automerge": false,
-  "dependencyDashboard": false,
-  "extends": ["config:recommended"],
-  "ignorePaths": ["caddy/**", "gatus/**"],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "datasourceTemplate": "git-refs",
-      "depNameTemplate": "https://github.com/{{repository}}.git",
-      "managerFilePatterns": ["/^[^/]+/source\\.json$/"],
-      "matchStrings": [
-        "\"reference\":\\s*\"(?<currentValue>[^\"]+)\",\\s*\"repository\":\\s*\"(?<repository>[^\"]+)\",\\s*\"revision\":\\s*\"(?<currentDigest>[a-f0-9]{40})\""
-      ]
-    },
-    {
-      "customType": "regex",
-      "datasourceTemplate": "pypi",
-      "description": "Update ComfyUI runtime Python packages",
-      "managerFilePatterns": ["/^comfyui-rocm/Dockerfile$/"],
-      "matchStrings": [
-        "(?<depName>fsspec|peft|rotary_embedding_torch)==(?<currentValue>[0-9.]+)"
-      ]
-    },
-    {
-      "customType": "regex",
-      "datasourceTemplate": "git-refs",
-      "depNameTemplate": "https://github.com/tailscale/tailscale.git",
-      "description": "Update the pinned Tailscale source",
-      "managerFilePatterns": ["/^gatus-tailscale/Dockerfile$/"],
-      "matchStrings": [
-        "ARG TAILSCALE_REFERENCE=(?<currentValue>[^\\s]+)\\s+ARG TAILSCALE_REVISION=(?<currentDigest>[a-f0-9]{40})"
-      ]
-    }
-  ]
+  "enabled": false
 }
