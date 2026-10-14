@@ -47,8 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture: [amd64, arm64]
-        recipe: ${{ fromJSON(needs.prepare.outputs.matrix).include }}
+        include: ${{ fromJSON(needs.prepare.outputs.matrix).build }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -62,6 +61,11 @@ jobs:
         run: |
           mise fmt --check
           actionlint -shellcheck="" .github/workflows/container.yaml
+      - name: Prepare Space for ROCm
+        if: matrix.recipe.image == 'comfyui-rocm'
+        run: |
+          sudo rm --force --recursive /opt/ghc /usr/local/lib/android /usr/share/dotnet
+          df -h /
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - id: metadata
@@ -77,10 +81,12 @@ jobs:
       - name: Build Image for Verification
         uses: docker/build-push-action@v7
         with:
-          build-args: UPSTREAM_REVISION=${{ matrix.recipe.revision }}
+          build-args: |
+            UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
+            UPSTREAM_REVISION=${{ matrix.recipe.revision }}
           build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
+          cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
           labels: ${{ steps.metadata.outputs.labels }}
           load: true
@@ -109,7 +115,9 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v7
         with:
-          build-args: UPSTREAM_REVISION=${{ matrix.recipe.revision }}
+          build-args: |
+            UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
+            UPSTREAM_REVISION=${{ matrix.recipe.revision }}
           build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
           context: ./${{ matrix.recipe.image }}
           labels: ${{ steps.metadata.outputs.labels }}
@@ -162,16 +170,21 @@ jobs:
           username: ${{ github.actor }}
       - name: Publish Multi-Architecture Manifest
         env:
+          ARCHITECTURES: ${{ join(matrix.recipe.architectures, ' ') }}
           BUILD_REVISION: ${{ github.sha }}
           IMAGE_NAME: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
           UPSTREAM_REVISION: ${{ matrix.recipe.revision }}
         run: |
+          set --
+          for architecture in $ARCHITECTURES; do
+            digest=$(cat "digests/$architecture")
+            set -- "$@" "$IMAGE_NAME@$digest"
+          done
           docker buildx imagetools create \
             --tag "$IMAGE_NAME:latest" \
             --tag "$IMAGE_NAME:sha-$BUILD_REVISION" \
             --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" \
-            "$IMAGE_NAME@$(cat digests/amd64)" \
-            "$IMAGE_NAME@$(cat digests/arm64)"
+            "$@"
           docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
 
   check:

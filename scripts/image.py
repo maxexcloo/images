@@ -29,6 +29,14 @@ def source(name):
         raise ValueError(f"Invalid upstream repository for {name}")
     if not re.fullmatch(r"[0-9a-f]{40}", data["revision"]):
         raise ValueError(f"Invalid pinned revision for {name}")
+    architectures = data.setdefault("architectures", ["amd64", "arm64"])
+    if (
+        not isinstance(architectures, list)
+        or not architectures
+        or len(architectures) != len(set(architectures))
+        or any(value not in {"amd64", "arm64"} for value in architectures)
+    ):
+        raise ValueError(f"Invalid architectures for {name}")
     return data
 
 
@@ -43,12 +51,29 @@ def main():
     if args.tag and len(selected) != 1:
         parser.error("--tag requires a single image")
     if args.action == "matrix":
-        print(json.dumps({"include": [
-            dict(image=name, **source(name)) for name in selected
-        ]}))
+        recipes = [dict(image=name, **source(name)) for name in selected]
+        print(json.dumps({
+            "include": recipes,
+            "build": [
+                {"architecture": architecture, "recipe": recipe}
+                for recipe in recipes
+                for architecture in recipe["architectures"]
+            ],
+        }))
         return
+    platform = args.platform
+    if args.action in ["build", "check", "test"] and platform is None:
+        platform = subprocess.check_output([
+            "docker", "info", "--format", "{{.OSType}}/{{.Architecture}}",
+        ], text=True).strip()
+        platform = platform.replace("/aarch64", "/arm64").replace("/x86_64", "/amd64")
     for name in selected:
         data = source(name)
+        if platform and platform.split("/")[1] not in data["architectures"]:
+            if args.image == "all" and not args.platform:
+                print(f"Skipping {name}: {platform} is outside its configured architectures.")
+                continue
+            raise ValueError(f"{name} does not support {platform}")
         if args.action == "lock":
             if name != "betterbench":
                 parser.error("Only BetterBench has a local dependency lockfile")
@@ -69,6 +94,7 @@ def main():
         if args.action in ["build", "check"]:
             command = [
                 "docker", "buildx", "build",
+                "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
                 "--build-arg", f"UPSTREAM_REVISION={data['revision']}",
                 "--build-context",
                 f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
@@ -79,7 +105,7 @@ def main():
             command.extend(["--tag", tag, name])
             run(*command)
         if args.action in ["check", "test"]:
-            run("sh", str(ROOT / name / "smoke.sh"), tag)
+            run("sh", str(ROOT / name / "smoke.sh"), tag, data["revision"])
 
 
 if __name__ == "__main__":

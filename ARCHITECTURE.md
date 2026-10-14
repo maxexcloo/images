@@ -16,10 +16,15 @@ BetterBench uses the upstream application and a local frozen Python lockfile.
 Redlib initially uses the upstream revision underlying the deployed native ARM
 image, preserving its application code while moving build ownership.
 
+ComfyUI ROCm preserves AI’s pinned ROCm base, ComfyUI revision and additional
+dependencies. AI consumes the published digest and retains all runtime configuration.
+Gatus/Tailscale packages the upstream binaries; Flylab retains its credential-consuming
+startup script and generated monitoring files in a thin deployment image.
+
 ## Verification & Publishing
 
 A shared workflow discovers active recipes from their source files. Each recipe
-builds on native AMD64 and ARM64 runners. Manual runs can select one recipe;
+builds on its configured native architectures; ComfyUI ROCm is AMD64 only. Manual runs can select one recipe;
 pushes and pull requests verify all active recipes. BetterBench runs upstream tests inside
 the build stage; each image then passes an isolated runtime smoke test and a
 vulnerability scan. Only verified builds on `main` publish architecture tags.
