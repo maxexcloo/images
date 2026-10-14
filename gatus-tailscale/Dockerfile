@@ -8,8 +8,8 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
     CGO_ENABLED=0 go build -o /gatus .
 
 FROM golang:1.27.2-alpine AS tailscale
-ARG TAILSCALE_REFERENCE=v1.102.5
-ARG TAILSCALE_REVISION=5fb2a81b065b0a0bbbfc67ab20a0d9c6a1108115
+ARG TAILSCALE_REFERENCE=v1.104.1
+ARG TAILSCALE_REVISION=9a522a9786c97eb7910c01ccb7bd66557b04c910
 WORKDIR /source
 ADD https://github.com/tailscale/tailscale.git#${TAILSCALE_REVISION} /source
 RUN go get golang.org/x/crypto@v0.57.0 golang.org/x/image@v0.45.0 golang.org/x/net@v0.60.0
