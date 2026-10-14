@@ -6,13 +6,13 @@ ComfyUI ROCm supports AMD64; other active recipes support AMD64 and ARM64.
 
 ## Images
 
-| Image | Upstream | Runtime |
-| --- | --- | --- |
-| Atvloadly | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly) | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
-| BetterBench | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench) | Non-root CLI; mount writable results at `/data` |
-| ComfyUI ROCm | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | AMD64 ROCm runtime; AI owns GPU allocation, models and persisted state |
-| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus) | Reusable binaries; Flylab adds generated monitoring configuration and startup |
-| Redlib | [Nachtalb/redlib](https://github.com/Nachtalb/redlib) | Non-root HTTP service on port 8080 |
+| Image           | Upstream                                                  | Runtime                                                                                                  |
+| --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly) | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
+| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench) | Non-root CLI; mount writable results at `/data`                                                          |
+| ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | AMD64 ROCm runtime; AI owns GPU allocation, models and persisted state                                   |
+| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)               | Reusable binaries; Flylab adds generated monitoring configuration and startup                            |
+| Redlib          | [Nachtalb/redlib](https://github.com/Nachtalb/redlib)     | Non-root HTTP service on port 8080                                                                       |
 
 Each directory owns its Dockerfile, smoke test and pinned `source.json`.
 BetterBench also owns its Python dependency lockfile. Application source is fetched
