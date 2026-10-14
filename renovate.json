@@ -20,7 +20,7 @@
       "description": "Update ComfyUI runtime Python packages",
       "managerFilePatterns": ["/^comfyui-rocm/Dockerfile$/"],
       "matchStrings": [
-        "(?<depName>peft|rotary_embedding_torch)==(?<currentValue>[0-9.]+)"
+        "(?<depName>fsspec|peft|rotary_embedding_torch)==(?<currentValue>[0-9.]+)"
       ]
     },
     {
