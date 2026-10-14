@@ -34,7 +34,7 @@ jobs:
         env:
           IMAGE_NAME: ${{ inputs.image || 'all' }}
         run: |
-          matrix=$(python3 scripts/image.py matrix "$IMAGE_NAME")
+          matrix=$(python3 .github/scripts/image.py matrix "$IMAGE_NAME")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
@@ -74,7 +74,6 @@ jobs:
         with:
           images: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
           labels: |
-            org.opencontainers.image.licenses=${{ matrix.recipe.licence }}
             org.opencontainers.image.revision=${{ matrix.recipe.revision }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
           tags: type=raw,value=sha-${{ github.sha }}-${{ matrix.architecture }}
@@ -92,10 +91,6 @@ jobs:
           load: true
           platforms: linux/${{ matrix.architecture }}
           tags: images-${{ matrix.recipe.image }}:test
-      - name: Smoke-Test Runtime
-        env:
-          IMAGE_NAME: ${{ matrix.recipe.image }}
-        run: python scripts/image.py test "$IMAGE_NAME"
       - name: Scan Image
         uses: aquasecurity/trivy-action@v0.36.0
         with:

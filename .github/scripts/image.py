@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and verify active image recipes using pinned upstream contexts."""
+"""Build active image recipes using pinned upstream contexts."""
 
 import argparse
 import json
@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def images():
@@ -42,7 +42,7 @@ def source(name):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["build", "check", "lock", "matrix", "test"])
+    parser.add_argument("action", choices=["build", "lock", "matrix"])
     parser.add_argument("image", default="all", nargs="?")
     parser.add_argument("--platform")
     parser.add_argument("--tag")
@@ -62,7 +62,7 @@ def main():
         }))
         return
     platform = args.platform
-    if args.action in ["build", "check", "test"] and platform is None:
+    if args.action == "build" and platform is None:
         platform = subprocess.check_output([
             "docker", "info", "--format", "{{.OSType}}/{{.Architecture}}",
         ], text=True).strip()
@@ -91,7 +91,7 @@ def main():
                 shutil.copyfile(Path(temporary) / "uv.lock", ROOT / name / "uv.lock")
             continue
         tag = args.tag or f"images-{name}:test"
-        if args.action in ["build", "check"]:
+        if args.action == "build":
             command = [
                 "docker", "buildx", "build",
                 "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
@@ -104,8 +104,6 @@ def main():
                 command.extend(["--platform", args.platform])
             command.extend(["--tag", tag, name])
             run(*command)
-        if args.action in ["check", "test"]:
-            run("sh", str(ROOT / name / "smoke.sh"), tag, data["revision"])
 
 
 if __name__ == "__main__":

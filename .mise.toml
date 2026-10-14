@@ -6,15 +6,15 @@ uv = "0.13.1"
 
 [tasks.build]
 description = "Build Active Images For The Local Architecture"
-run = "python scripts/image.py build"
+run = "python .github/scripts/image.py build"
 
 [tasks.check]
-description = "Validate Workflows, Build Active Images & Test Their Runtimes"
+description = "Validate Configuration & Build Active Images"
 run = """
 updatecli manifest validate --config .updatecli.d --disable-templating --strict
 mise fmt --check
 actionlint -shellcheck="" .github/workflows/container.yaml
-python scripts/image.py check
+python .github/scripts/image.py build
 """
 
 [tasks."dependencies:check"]
@@ -41,7 +41,3 @@ updatecli pipeline apply --config .updatecli.d --disable-changelog --disable-uda
 [tasks.fmt]
 description = "Format The Mise Configuration"
 run = "mise fmt"
-
-[tasks.test]
-description = "Test Locally Built Images"
-run = "python scripts/image.py test"

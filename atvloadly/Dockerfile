@@ -34,7 +34,6 @@ RUN chmod 1777 /tmp \
         avahi-daemon avahi-utils dbus \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade --no-install-recommends -y \
     && rm -rf /var/lib/apt/lists/*
-COPY --from=source /source/LICENSE /usr/share/licenses/atvloadly/LICENSE
 COPY config.yaml /keep/config.yaml
 COPY --from=backend /atvloadly /usr/bin/atvloadly
 COPY start.sh /usr/local/bin/start-atvloadly
