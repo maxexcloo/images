@@ -78,22 +78,3 @@ mise exec -- python scripts/image.py lock betterbench
 Build infrastructure uses AGPL-3.0; application sources retain their upstream
 licences: Apache-2.0 for BetterBench and Gatus, BSD-3-Clause for Tailscale,
 GPL-3.0 for ComfyUI, and AGPL-3.0-only for Atvloadly and Redlib.
-
-## Dependency Updates
-
-Mise installs the pinned Updatecli CLI. Run `mise run dependencies:check` locally
-to preview updates from `.updatecli.d/`. GitHub authentication uses the existing
-`gh` login; credentials stay in the command process.
-
-Review compatibility and major upgrades separately, then apply a selected group:
-
-```sh
-mise run dependencies:update --labels group:tools
-```
-
-Use the groups declared in the policy, review the Git diff and run the project
-checks before committing or deploying. Updatecli changes local files; it does
-not create issues, pull requests, commits or deployments. Hosted Renovate is disabled.
-
-After changing the BetterBench source, refresh its lockfile with
-`mise exec -- python scripts/image.py lock betterbench` before building.
