@@ -1,0 +1,9 @@
+{
+  "licence": "GPL-3.0",
+  "reference": "v0.39.2",
+  "repository": "Comfy-Org/ComfyUI",
+  "revision": "3c1b7a17fdf239d35ce98cc777756f572d089795",
+  "architectures": [
+    "amd64"
+  ]
+}
