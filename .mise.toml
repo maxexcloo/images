@@ -17,15 +17,6 @@ actionlint -shellcheck="" .github/workflows/container.yaml
 python scripts/image.py check
 """
 
-[tasks.fmt]
-description = "Format The Mise Configuration"
-run = "mise fmt"
-
-[tasks.test]
-description = "Test Locally Built Images"
-run = "python scripts/image.py test"
-
-# Dependency Updates
 [tasks."dependencies:check"]
 description = "Preview Local Dependency Updates"
 run = """
@@ -46,3 +37,11 @@ if [ -n "${usage_labels:-}" ]; then
 fi
 updatecli pipeline apply --config .updatecli.d --disable-changelog --disable-udash-report --unique-tmp-dir "$@"
 """
+
+[tasks.fmt]
+description = "Format The Mise Configuration"
+run = "mise fmt"
+
+[tasks.test]
+description = "Test Locally Built Images"
+run = "python scripts/image.py test"
