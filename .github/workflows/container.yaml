@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   cancel-in-progress: true
-  group: container-${{ github.ref }}
+  group: container-${{ github.ref }}-${{ inputs.image || 'all' }}
 
 jobs:
   prepare:
