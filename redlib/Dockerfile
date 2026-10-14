@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.90.0-slim-bookworm AS certificates
+FROM rust:1.99.0-slim-bookworm AS certificates
 
 FROM certificates AS build
 

@@ -2,22 +2,14 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "automerge": false,
   "dependencyDashboard": false,
-  "extends": [
-    "config:recommended"
-  ],
-  "ignorePaths": [
-    "**/*.disabled",
-    "caddy/**",
-    "gatus/**"
-  ],
+  "extends": ["config:recommended"],
+  "ignorePaths": ["caddy/**", "gatus/**"],
   "customManagers": [
     {
       "customType": "regex",
       "datasourceTemplate": "git-refs",
       "depNameTemplate": "https://github.com/{{repository}}.git",
-      "managerFilePatterns": [
-        "/^[^/]+/source\\.json$/"
-      ],
+      "managerFilePatterns": ["/^[^/]+/source\\.json$/"],
       "matchStrings": [
         "\"reference\":\\s*\"(?<currentValue>[^\"]+)\",\\s*\"repository\":\\s*\"(?<repository>[^\"]+)\",\\s*\"revision\":\\s*\"(?<currentDigest>[a-f0-9]{40})\""
       ]
