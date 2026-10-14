@@ -34,13 +34,17 @@ run = "python .github/scripts/image.py build"
 
 [tasks.check]
 description = "Validate Configuration & Build Active Images"
-run = """
-updatecli manifest validate --config .updatecli.d --disable-templating --strict
-mise fmt --check
-actionlint -shellcheck="" .github/workflows/container.yaml
-python .github/scripts/image.py build
-"""
+depends = ["validate"]
+run = "python .github/scripts/image.py build"
 
 [tasks.fmt]
 description = "Format The Mise Configuration"
 run = "mise fmt"
+
+[tasks.validate]
+description = "Validate Repository Configuration"
+run = """
+updatecli manifest validate --config .updatecli.d --disable-templating --strict
+mise fmt --check
+actionlint -shellcheck="" .github/workflows/container.yaml
+"""
