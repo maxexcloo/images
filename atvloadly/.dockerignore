@@ -3,4 +3,5 @@
 !tests/**
 !config.yaml
 !reliability.patch
+!security.patch
 !start.sh

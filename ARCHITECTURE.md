@@ -8,7 +8,8 @@ that revision as a named `upstream` context; application code is not copied into
 this repository. Renovate proposes revision updates for manual review.
 
 Atvloadly packages upstream v0.6.2 with local pairing completion and discovery
-refresh patches. Browser and Go regression tests run in the build; its runtime
+refresh patches and a pinned Go dependency security patch. Runtime OS packages
+receive available security updates. Browser and Go regression tests run in the build; its runtime
 includes Avahi and D-Bus. Kubernetes deployment remains owned by kubelab.
 
 BetterBench uses the upstream application and a local frozen Python lockfile.

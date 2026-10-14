@@ -1,11 +1,13 @@
 ARG ATVLOADLY_VERSION=v0.6.2
-FROM golang:1.26.2-bookworm AS source
+FROM golang:1.26.9-bookworm AS source
 ARG ATVLOADLY_VERSION
 ARG UPSTREAM_REVISION
 WORKDIR /source
 COPY --from=upstream / /source
 COPY reliability.patch /tmp/reliability.patch
 RUN git apply /tmp/reliability.patch
+COPY security.patch /tmp/security.patch
+RUN git apply /tmp/security.patch
 
 FROM node:24.15.0-bookworm-slim AS frontend
 WORKDIR /source/web/static
@@ -30,6 +32,7 @@ RUN chmod 1777 /tmp \
     && apt-get update -o APT::Update::Error-Mode=any \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
         avahi-daemon avahi-utils dbus \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade --no-install-recommends -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=source /source/LICENSE /usr/share/licenses/atvloadly/LICENSE
 COPY config.yaml /keep/config.yaml

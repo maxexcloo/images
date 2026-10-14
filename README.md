@@ -36,8 +36,9 @@ mise exec -- python scripts/image.py check betterbench
 mise exec -- python scripts/image.py check redlib
 ```
 
-Atvloadly includes pairing completion and discovery refresh patches, with browser
-and Go regression tests during its build. Its runtime smoke test checks the UI,
+Atvloadly includes pairing completion and discovery refresh patches, plus pinned
+security fixes for Go dependencies and updates to runtime OS packages. Browser
+and Go regression tests run during its build. Its runtime smoke test checks the UI,
 Avahi and D-Bus without LAN access. Deployment requires host networking and
 `seccomp=unconfined` for the upstream signing tools.
 
