@@ -20,6 +20,7 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
 YAML
+chmod 0644 "$configuration"
 "$engine" run --cap-drop=ALL --entrypoint /app/tailscale --network=none --read-only --rm \
   --security-opt=no-new-privileges "$image" version
 container=$("$engine" run --cap-drop=ALL --detach --network=none --read-only \
