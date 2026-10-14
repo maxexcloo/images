@@ -24,7 +24,8 @@ startup script and generated monitoring files in a thin deployment image.
 ## Verification & Publishing
 
 Build orchestration lives in `.github/scripts/`.
-A shared workflow discovers active recipes from their source files. Each recipe
+The preparation job runs `mise run validate` once to check Updatecli policies, Mise
+formatting and the workflow before discovering active recipes from their source files. Each recipe
 builds on its configured native architectures; ComfyUI ROCm is AMD64 only. Manual runs can select one recipe;
 pushes and pull requests verify all active recipes. BetterBench runs upstream tests inside
 the build stage; each image then passes a vulnerability scan. Only verified builds

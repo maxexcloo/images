@@ -29,6 +29,12 @@ mise install
 mise run check
 ```
 
+Validate repository configuration without building images:
+
+```sh
+mise run validate
+```
+
 Build one image:
 
 ```sh
