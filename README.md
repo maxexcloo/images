@@ -1,69 +1,62 @@
 # Images
 
-[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-active-success)](https://img.shields.io/badge/status-active-success)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://github.com/maxexcloo/images/pkgs/container/caddy)
-[![Dockerfile](https://img.shields.io/badge/dockerfile-blue.svg)](Dockerfile)
+Pinned upstream applications packaged for personal infrastructure. Active builds publish
+`ghcr.io/maxexcloo/betterbench` and `ghcr.io/maxexcloo/redlib` for Linux AMD64 and ARM64.
 
-Custom Docker images for personal infrastructure deployment with automated builds and multi-architecture support.
+## Images
 
-## Quick Start
+| Image | Upstream | Runtime |
+| --- | --- | --- |
+| BetterBench | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench) | Non-root CLI; mount writable results at `/data` |
+| Redlib | [Nachtalb/redlib](https://github.com/Nachtalb/redlib) | Non-root HTTP service on port 8080 |
 
-1. Pull an image: `docker pull ghcr.io/maxexcloo/caddy:latest`
-2. Run locally: `docker run -p 80:80 ghcr.io/maxexcloo/caddy:latest`
-3. View available tags on GitHub Container Registry
+Each directory owns its Dockerfile, smoke test and pinned `source.json`.
+BetterBench also owns its Python dependency lockfile. Application source is fetched
+as a named BuildKit context at the exact configured commit.
 
-## Features
+Caddy and Gatus recipes remain as legacy files. Their workflows are disabled;
+this repository does not build or publish them.
 
-- **Automated builds**: Triggered by upstream releases
-- **Multi-architecture**: Support for linux/amd64 and linux/arm64
-- **Enhanced functionality**: Extended upstream images with additional features
-- **Release tracking**: Automatic version tracking and updates
-- **Version tagging**: Semantic versioning with latest tags
+## Development
 
-## Installation
+Docker with Buildx is required. Install the pinned tools and verify the host architecture:
 
-Pull images directly from GitHub Container Registry:
-
-```bash
-# Pull latest version
-docker pull ghcr.io/maxexcloo/caddy:latest
-docker pull ghcr.io/maxexcloo/gatus:latest
-
-# Pull specific version
-docker pull ghcr.io/maxexcloo/caddy:v2.7.6
+```sh
+mise install
+mise run check
 ```
 
-## Usage
+Build or test one image:
 
-### Available Images
-
-**Caddy** - Enhanced web server with Cloudflare DNS and Docker proxy plugins
-```bash
-docker run -p 80:80 -p 443:443 ghcr.io/maxexcloo/caddy:latest
+```sh
+mise exec -- python scripts/image.py check betterbench
+mise exec -- python scripts/image.py check redlib
 ```
 
-**Gatus** - Health monitoring service with Tailscale integration
-```bash
-docker run -p 8080:8080 ghcr.io/maxexcloo/gatus:latest
+BetterBench runs upstream tests during its image build. Smoke tests verify its
+CLI, packaged corpus and writable results directory. Redlib smoke tests verify
+its CLI and local settings endpoint without contacting Reddit.
+
+## Publishing
+
+Pull requests build, test and scan both architectures without publishing.
+Pushes and manual runs on `main` publish verified architecture images, then assemble
+multi-architecture manifests. Tags include `latest`, `sha-<build-commit>` and
+`source-<upstream-commit>`. Pin deployed images by digest.
+
+The repository needs Write access under each existing GHCR package's
+**Settings → Manage Actions Access**. Publishing uses `GITHUB_TOKEN`.
+The package names stay unchanged when moving from the application forks.
+
+Renovate proposes source and build dependency updates for manual review. When
+BetterBench's dependency metadata changes, refresh its lockfile against the
+new pinned source before merging:
+
+```sh
+mise exec -- python scripts/image.py lock betterbench
 ```
 
-### Repository Structure
+## Licence
 
-Each image directory contains:
-- `Dockerfile` - Image build definition
-- `REPO` - Upstream repository reference for tracking updates
-- `LATEST_RELEASE` - Current version being tracked
-- Additional configuration files as needed
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make changes following the code standards in CLAUDE.md
-4. Build and test: `mise run check`
-5. Submit a pull request
-
-## License
-
-This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+Build infrastructure uses AGPL-3.0; application sources retain their upstream
+licences: Apache-2.0 for BetterBench and AGPL-3.0-only for Redlib.

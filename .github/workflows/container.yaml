@@ -1,0 +1,182 @@
+name: Container
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  cancel-in-progress: true
+  group: container-${{ github.ref }}
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.recipes.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - id: recipes
+        name: Discover Recipes
+        run: |
+          matrix=$(python3 scripts/image.py matrix)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.recipe.image }} (${{ matrix.architecture }})
+    needs: prepare
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
+        recipe: ${{ fromJSON(needs.prepare.outputs.matrix).include }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set Up Tools
+        uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.9
+      - name: Validate Configuration
+        run: |
+          mise fmt --check
+          actionlint -shellcheck="" .github/workflows/container.yaml
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - id: metadata
+        name: Extract Metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
+          labels: |
+            org.opencontainers.image.licenses=${{ matrix.recipe.licence }}
+            org.opencontainers.image.revision=${{ matrix.recipe.revision }}
+            org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
+          tags: type=raw,value=sha-${{ github.sha }}-${{ matrix.architecture }}
+      - name: Build Image for Verification
+        uses: docker/build-push-action@v7
+        with:
+          build-args: UPSTREAM_REVISION=${{ matrix.recipe.revision }}
+          build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
+          cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
+          context: ./${{ matrix.recipe.image }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          load: true
+          platforms: linux/${{ matrix.architecture }}
+          tags: images-${{ matrix.recipe.image }}:test
+      - name: Smoke-Test Runtime
+        env:
+          IMAGE_NAME: ${{ matrix.recipe.image }}
+        run: python scripts/image.py test "$IMAGE_NAME"
+      - name: Scan Image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          exit-code: "1"
+          ignore-unfixed: true
+          image-ref: images-${{ matrix.recipe.image }}:test
+          severity: CRITICAL,HIGH
+      - name: Log In to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v4
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+      - id: publish
+        name: Publish Verified Image
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v7
+        with:
+          build-args: UPSTREAM_REVISION=${{ matrix.recipe.revision }}
+          build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
+          context: ./${{ matrix.recipe.image }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          platforms: linux/${{ matrix.architecture }}
+          provenance: mode=max
+          push: true
+          sbom: true
+          tags: ${{ steps.metadata.outputs.tags }}
+      - name: Record Digest
+        if: steps.publish.outcome == 'success'
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          mkdir -p digests
+          printf '%s\n' "$IMAGE_DIGEST" > "digests/$ARCHITECTURE"
+      - name: Upload Digest
+        if: steps.publish.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.recipe.image }}-${{ matrix.architecture }}
+          path: digests/*
+          retention-days: 1
+
+  publish:
+    name: Publish ${{ matrix.recipe.image }}
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJSON(needs.prepare.outputs.matrix).include }}
+    steps:
+      - name: Download Digests
+        uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
+          path: digests
+          pattern: digests-${{ matrix.recipe.image }}-*
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log In to GHCR
+        uses: docker/login-action@v4
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+      - name: Publish Multi-Architecture Manifest
+        env:
+          BUILD_REVISION: ${{ github.sha }}
+          IMAGE_NAME: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
+          UPSTREAM_REVISION: ${{ matrix.recipe.revision }}
+        run: |
+          docker buildx imagetools create \
+            --tag "$IMAGE_NAME:latest" \
+            --tag "$IMAGE_NAME:sha-$BUILD_REVISION" \
+            --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" \
+            "$IMAGE_NAME@$(cat digests/amd64)" \
+            "$IMAGE_NAME@$(cat digests/arm64)"
+          docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
+
+  check:
+    name: Check
+    if: always()
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Build & Publishing Results
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$PUBLISH_RESULT" = success || test "$PUBLISH_RESULT" = skipped

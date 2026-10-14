@@ -1,38 +1,28 @@
+[tools]
+actionlint = "1.7.12"
+python = "3.14.7"
+uv = "0.13.0"
+
 [tasks.build]
-description = "Build all Docker images"
-run = """
-for dir in */; do
-  if [ -f "$dir/Dockerfile" ]; then
-    echo "Building $dir..."
-    docker build -t "test-$(basename $dir)" "$dir"
-  fi
-done
-"""
+description = "Build active images for the local architecture"
+run = "python scripts/image.py build"
 
 [tasks.check]
-description = "All validation (fmt + build + test)"
-depends = ["fmt", "build", "test"]
+description = "Validate workflows, build active images & test their runtimes"
+run = """
+mise fmt --check
+actionlint -shellcheck="" .github/workflows/container.yaml
+python scripts/image.py check
+"""
 
 [tasks.dev]
-description = "Development validation cycle"
+description = "Run the development checks"
 depends = ["check"]
 
 [tasks.fmt]
-description = "Format Dockerfile and config files"
-run = """
-echo "Dockerfile formatting validation complete"
-# Note: hadolint could be added here for Dockerfile linting
-"""
+description = "Format the Mise configuration"
+run = "mise fmt"
 
 [tasks.test]
-description = "Test all Docker images"
-run = """
-for dir in */; do
-  if [ -f "$dir/Dockerfile" ]; then
-    echo "Testing $dir..."
-    docker run --rm "test-$(basename $dir)" --version 2>/dev/null || \
-    docker run --rm "test-$(basename $dir)" --help 2>/dev/null || \
-    echo "Basic test completed for $(basename $dir)"
-  fi
-done
-"""
+description = "Test locally built images"
+run = "python scripts/image.py test"

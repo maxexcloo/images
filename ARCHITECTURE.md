@@ -1,62 +1,31 @@
-# ARCHITECTURE.md - Technical Design
+# Image Build Architecture
 
-## Overview
+## Source Ownership
 
-Custom Docker image collection with automated builds and multi-architecture support for personal infrastructure services.
+Active image directories contain packaging and verification files. `source.json`
+records the upstream repository, reference and immutable commit. Builds receive
+that revision as a named `upstream` context; application code is not copied into
+this repository. Renovate proposes revision updates for manual review.
 
-## Core Components
+BetterBench uses the upstream application and a local frozen Python lockfile.
+Redlib initially uses the upstream revision underlying the deployed native ARM
+image, preserving its application code while moving build ownership.
 
-### Image Building
-- **Multi-stage builds**: Optimize image size and security through staged construction
-- **Multi-architecture**: Support for linux/amd64 and linux/arm64 platforms
-- **Base image selection**: Carefully chosen base images for security and size optimization
-- **Plugin integration**: Extended functionality through modular plugin architecture
+## Verification & Publishing
 
-### Automation System
-- **Release tracking**: Automated monitoring of upstream repositories for new releases
-- **Build triggers**: GitHub Actions workflows triggered by upstream changes
-- **Version management**: Semantic versioning with latest and specific version tags
-- **Registry publishing**: Automated publishing to GitHub Container Registry
+A shared workflow discovers active recipes from their source files. Each recipe
+builds on native AMD64 and ARM64 runners. BetterBench runs upstream tests inside
+the build stage; each image then passes an isolated runtime smoke test and a
+vulnerability scan. Only verified builds on `main` publish architecture tags.
 
-### Service Integration
-- **Enhanced functionality**: Extended upstream images with additional plugins and features
-- **Configuration management**: Centralized configuration through environment variables
-- **Health monitoring**: Built-in health checks and monitoring capabilities
-- **Security hardening**: Applied security best practices and minimal attack surface
+A dependent publishing job assembles the two architecture digests for each image
+into `latest`, build-commit and source-commit manifests. Existing package names
+are retained. Provenance, SBOMs and licence metadata accompany published images.
 
-## Data Flow
+Local Mise checks run the same recipes and smoke tests on the host architecture.
+Remote CI establishes both architecture support and registry publishing.
 
-1. **Version Detection**: Monitor upstream repositories → Version comparison → Trigger detection
-2. **Build Process**: Dockerfile execution → Multi-stage build → Multi-arch compilation → Registry push
-3. **Deployment**: Registry pull → Container instantiation → Service startup → Health verification
+## Legacy Recipes
 
-## Key Features
-
-### Caddy Image
-- **DNS Challenge**: Cloudflare DNS plugin for automatic SSL certificate generation
-- **Docker Proxy**: Docker container discovery and automatic proxy configuration
-- **Performance**: Optimized configuration for high-performance web serving
-- **Security**: Enhanced security headers and configuration
-
-### Gatus Image
-- **Tailscale Integration**: VPN connectivity for secure monitoring across networks
-- **Health Monitoring**: Comprehensive service health checking and alerting
-- **Supervisor Management**: Process supervision for reliable service operation
-- **Multi-service**: Combined Gatus and Tailscale services in single container
-
-## Technology Stack
-
-### Build System
-- **Docker**: Multi-stage containerization platform
-- **GitHub Actions**: Continuous integration and deployment
-- **QEMU**: Multi-architecture emulation for cross-platform builds
-- **Buildx**: Docker build enhancement for advanced features
-
-### Runtime
-- **Alpine Linux**: Minimal base images for security and size optimization
-- **Supervisor**: Process management for multi-service containers
-- **Health Checks**: Container health monitoring and automatic recovery
-
----
-
-*Technical architecture documentation for the images project.*
+Caddy and Gatus files and disabled workflows are retained for historical context.
+They are excluded from active recipe discovery and Renovate updates.
