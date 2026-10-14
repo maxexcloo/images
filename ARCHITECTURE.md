@@ -38,5 +38,5 @@ Remote CI establishes both architecture support and registry publishing.
 
 ## Legacy Recipes
 
-Caddy and Gatus files and disabled workflows are retained for historical context.
-They are excluded from active recipe discovery and Renovate updates.
+Caddy and Gatus recipes are retained as legacy files. They are excluded from
+active recipe discovery and Renovate updates.

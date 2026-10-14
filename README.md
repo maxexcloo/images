@@ -18,7 +18,7 @@ Each directory owns its Dockerfile, smoke test and pinned `source.json`.
 BetterBench also owns its Python dependency lockfile. Application source is fetched
 as a named BuildKit context at the exact configured commit.
 
-Caddy and Gatus recipes remain as legacy files. Their workflows are disabled;
+Caddy and Gatus recipes remain as legacy files. Their former workflows have been removed;
 this repository does not build or publish them.
 
 ## Development

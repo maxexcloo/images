@@ -1,14 +1,14 @@
 [tools]
 actionlint = "1.7.12"
-python = "3.14.7"
+python = "3.15.0"
 uv = "0.13.0"
 
 [tasks.build]
-description = "Build active images for the local architecture"
+description = "Build Active Images For The Local Architecture"
 run = "python scripts/image.py build"
 
 [tasks.check]
-description = "Validate workflows, build active images & test their runtimes"
+description = "Validate Workflows, Build Active Images & Test Their Runtimes"
 run = """
 mise fmt --check
 actionlint -shellcheck="" .github/workflows/container.yaml
@@ -16,13 +16,13 @@ python scripts/image.py check
 """
 
 [tasks.dev]
-description = "Run the development checks"
+description = "Run The Development Checks"
 depends = ["check"]
 
 [tasks.fmt]
-description = "Format the Mise configuration"
+description = "Format The Mise Configuration"
 run = "mise fmt"
 
 [tasks.test]
-description = "Test locally built images"
+description = "Test Locally Built Images"
 run = "python scripts/image.py test"
