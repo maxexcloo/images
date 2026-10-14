@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://www.updatecli.io/schema/latest/policy/manifest/config.json
+name: Update ComfyUI fsspec
+pipelineid: update-comfyui-fsspec
+labels:
+  group: packages
+sources:
+  version:
+    kind: pypi
+    spec:
+      name: fsspec
+targets:
+  pin:
+    kind: file
+    sourceid: version
+    spec:
+      file: comfyui-rocm/Dockerfile
+      matchpattern: (fsspec==)[0-9.]+
+      replacepattern: ${1}{{ source "version" }}
+---
+name: Update ComfyUI peft
+pipelineid: update-comfyui-peft
+labels:
+  group: packages
+sources:
+  version:
+    kind: pypi
+    spec:
+      name: peft
+targets:
+  pin:
+    kind: file
+    sourceid: version
+    spec:
+      file: comfyui-rocm/Dockerfile
+      matchpattern: (peft==)[0-9.]+
+      replacepattern: ${1}{{ source "version" }}
+---
+name: Update ComfyUI rotary_embedding_torch
+pipelineid: update-comfyui-rotary-embedding-torch
+labels:
+  group: packages
+sources:
+  version:
+    kind: pypi
+    spec:
+      name: rotary_embedding_torch
+targets:
+  pin:
+    kind: file
+    sourceid: version
+    spec:
+      file: comfyui-rocm/Dockerfile
+      matchpattern: (rotary_embedding_torch==)[0-9.]+
+      replacepattern: ${1}{{ source "version" }}
