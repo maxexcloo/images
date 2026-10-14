@@ -80,13 +80,6 @@ targets:
       engine: dasel/v3
       file: atvloadly/source.json
       key: revision
-  runtime:
-    kind: file
-    sourceid: release
-    spec:
-      file: atvloadly/Dockerfile
-      matchpattern: (?m)^(ARG ATVLOADLY_VERSION=)v?[0-9.]+$
-      replacepattern: ${1}{{ source "release" }}
 ---
 name: Update betterbench Source
 pipelineid: update-betterbench-source
@@ -104,7 +97,7 @@ sources:
     spec:
       command: |-
         set -eu
-        revision=$(git ls-remote --exit-code https://github.com/GGZ14/BetterBench.git refs/heads/main | awk 'NR == 1 { print $1 }')
+        revision=$(git ls-remote --exit-code https://github.com/{{ source "repository" }}.git refs/heads/main | awk 'NR == 1 { print $1 }')
         test -n "$revision"
         printf '%s\n' "$revision"
 targets:
@@ -220,7 +213,7 @@ sources:
     spec:
       command: |-
         set -eu
-        revision=$(git ls-remote --exit-code https://github.com/Nachtalb/redlib.git refs/heads/main | awk 'NR == 1 { print $1 }')
+        revision=$(git ls-remote --exit-code https://github.com/{{ source "repository" }}.git refs/heads/main | awk 'NR == 1 { print $1 }')
         test -n "$revision"
         printf '%s\n' "$revision"
 targets:

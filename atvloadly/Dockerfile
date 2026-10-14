@@ -1,7 +1,6 @@
-ARG ATVLOADLY_VERSION=v0.6.2
+ARG UPSTREAM_REFERENCE
 FROM golang:1.26.9-bookworm AS source
-ARG ATVLOADLY_VERSION
-ARG UPSTREAM_REVISION
+ARG UPSTREAM_REFERENCE
 WORKDIR /source
 COPY --from=upstream / /source
 COPY reliability.patch /tmp/reliability.patch
@@ -21,9 +20,9 @@ COPY --from=frontend /source/web/static/dist web/static/dist
 COPY tests/pair_completion_test.go internal/manager/pair_completion_test.go
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     go test ./internal/manager ./internal/service \
-    && go build -ldflags="-extldflags=-static -linkmode=external -X github.com/bitxeno/atvloadly/internal/app/build.Version=${ATVLOADLY_VERSION} -X github.com/bitxeno/atvloadly/internal/app/build.Mode=production" -o /atvloadly -tags netgo,osusergo .
+    && go build -ldflags="-extldflags=-static -linkmode=external -X github.com/bitxeno/atvloadly/internal/app/build.Version=${UPSTREAM_REFERENCE} -X github.com/bitxeno/atvloadly/internal/app/build.Mode=production" -o /atvloadly -tags netgo,osusergo .
 
-FROM bitxeno/atvloadly:${ATVLOADLY_VERSION}
+FROM bitxeno/atvloadly:${UPSTREAM_REFERENCE}
 ENV SERVICE_PORT=5533
 LABEL org.opencontainers.image.source="https://github.com/maxexcloo/images"
 # The upstream image leaves /tmp unwritable by apt's unprivileged helper.

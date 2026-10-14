@@ -1,11 +1,14 @@
 [tools]
+# gh = "latest"
+# python = "latest"
+# updatecli = "latest"
+# uv = "latest"
 actionlint = "1.7.12"
 python = "3.15.0"
 updatecli = "0.122.1"
 uv = "0.13.1"
 
 # Dependency Updates
-
 [tasks."dependencies:check"]
 description = "Preview Local Dependency Updates"
 run = """
@@ -28,7 +31,6 @@ updatecli pipeline apply --config .updatecli.d --disable-changelog --disable-uda
 """
 
 # Development
-
 [tasks.build]
 description = "Build Active Images For The Local Architecture"
 run = "python .github/scripts/image.py build"
