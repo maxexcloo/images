@@ -23,7 +23,7 @@ RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/ubuntu.sources \
     && apt-get install --no-install-recommends -y ca-certificates curl libstdc++6 \
     && apt-get upgrade --no-install-recommends -y \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --no-create-home --uid 1000 redlib
+    && useradd --no-create-home --uid 1001 redlib
 COPY --from=build /redlib/target/release/redlib /usr/local/bin/redlib
 
 USER redlib
