@@ -43,7 +43,8 @@ Avahi and D-Bus without LAN access. Deployment requires host networking and
 
 BetterBench runs upstream tests during its image build. Smoke tests verify its
 CLI, packaged corpus and writable results directory. Redlib smoke tests verify
-its CLI and local settings endpoint without contacting Reddit.
+its CLI version and the health-check executable without contacting Reddit. HTTP readiness
+requires successful Reddit OAuth and belongs to live deployment verification.
 
 ## Publishing
 

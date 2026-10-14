@@ -6,9 +6,9 @@
     "config:recommended"
   ],
   "ignorePaths": [
+    "**/*.disabled",
     "caddy/**",
-    "gatus/**",
-    "**/*.disabled"
+    "gatus/**"
   ],
   "customManagers": [
     {
