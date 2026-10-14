@@ -1,0 +1,6 @@
+*
+!tests/
+!tests/**
+!config.yaml
+!reliability.patch
+!start.sh

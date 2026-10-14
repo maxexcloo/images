@@ -1,0 +1,114 @@
+--- a/internal/manager/pair_manager.go
++++ b/internal/manager/pair_manager.go
+@@ -67,6 +67,8 @@
+ 	}
+ 
+ 	log.Infof("Pairing successful for device %s (%s)", device.Name, device.UDID)
++	// Completion is determined by the command result, not its output wording.
++	_, _ = t.outputStdout.Write([]byte("SUCCESS\n"))
+ 	return nil
+ }
+ 
+--- a/internal/manager/device_manager_avahi.go
++++ b/internal/manager/device_manager_avahi.go
+@@ -32,6 +32,8 @@
+ // errAvahiBrowserFreed reports that a discovery browser was freed because the
+ // provider dropped a dead D-Bus connection.
+ var errAvahiBrowserFreed = errors.New("avahi browser freed")
++
++var errAvahiRefresh = errors.New("avahi discovery refresh")
+ 
+ // avahiDaemon is the process-wide Avahi connection.
+ //
+@@ -114,6 +116,9 @@
+ 				log.Info("Avahi discovery stopped")
+ 				return
+ 			}
++			if errors.Is(stopped, errAvahiRefresh) {
++				continue
++			}
+ 			log.Warnf("Avahi discovery interrupted: %v, restarting in %s", stopped, avahiRestartDelay)
+ 		}
+ 
+@@ -181,6 +186,11 @@
+ 		return fmt.Errorf("remote manual pairing browser unavailable")
+ 	}
+ 
++	// Rebrowse cached services after missed announcements or failed lookups,
++	// including after the host wakes. Pairing sessions keep their own context.
++	refresh := time.NewTimer(time.Minute)
++	defer refresh.Stop()
++
+ 	log.Info("Avahi discovery started...")
+ 
+ 	// A closed channel means the browser was freed, which happens when the
+@@ -190,6 +200,8 @@
+ 		select {
+ 		case <-ctx.Done():
+ 			return nil
++		case <-refresh.C:
++			return errAvahiRefresh
+ 		case service, ok := <-sbAppleMobdev.AddChannel:
+ 			if !ok {
+ 				return errAvahiBrowserFreed
+--- a/web/static/src/page/home/index.vue
++++ b/web/static/src/page/home/index.vue
+@@ -403,6 +403,8 @@
+   data() {
+     return {
+       devices: [],
++      deviceRefreshTimer: null,
++      devicesStopped: false,
+       list: [
+         // {
+         //   ID: 1,
+@@ -439,8 +441,10 @@
+   },
+   computed: {
+     pairableDevices: function () {
+-      return this.devices.filter(function (item) {
+-        return item.status == "pairable";
++      return this.devices.filter((item) => {
++        return item.status == "pairable" && !this.devices.some(
++          (paired) => paired.status == "paired" && paired.ip == item.ip
++        );
+       });
+     },
+     pairedDevices: function () {
+@@ -470,9 +474,12 @@
+     },
+   },
+   created() {
++    this.refreshDevices();
+     this.fetchData();
+   },
+   unmounted() {
++    this.devicesStopped = true;
++    clearTimeout(this.deviceRefreshTimer);
+     this.checkInstallingTimer && clearTimeout(this.checkInstallingTimer);
+     if (this.newInstallToastId) {
+       toast.update(this.newInstallToastId, {
+@@ -484,12 +491,19 @@
+     }
+   },
+   methods: {
++    refreshDevices() {
++      return api.getDevices().then((res) => {
++        if (!this.devicesStopped) this.devices = res.data;
++      }).catch((err) => {
++        console.error("Device discovery refresh failed", err);
++      }).finally(() => {
++        if (!this.devicesStopped) {
++          this.deviceRefreshTimer = setTimeout(() => this.refreshDevices(), 5000);
++        }
++      });
++    },
+     fetchData() {
+       let _this = this;
+-
+-      api.getDevices().then((res) => {
+-        _this.devices = res.data;
+-      });
+ 
+       api.getServiceStatus().then((res) => {
+         _this.services = res.data;

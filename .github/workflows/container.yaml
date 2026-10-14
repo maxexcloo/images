@@ -3,6 +3,11 @@ name: Container
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      image:
+        default: all
+        description: Image recipe to build, or all
+        type: string
   push:
     branches: [main]
 
@@ -26,8 +31,10 @@ jobs:
           persist-credentials: false
       - id: recipes
         name: Discover Recipes
+        env:
+          IMAGE_NAME: ${{ inputs.image || 'all' }}
         run: |
-          matrix=$(python3 scripts/image.py matrix)
+          matrix=$(python3 scripts/image.py matrix "$IMAGE_NAME")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:

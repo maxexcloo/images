@@ -1,12 +1,14 @@
 # Images
 
 Pinned upstream applications packaged for personal infrastructure. Active builds publish
-`ghcr.io/maxexcloo/betterbench` and `ghcr.io/maxexcloo/redlib` for Linux AMD64 and ARM64.
+`ghcr.io/maxexcloo/atvloadly`, `ghcr.io/maxexcloo/betterbench` and
+`ghcr.io/maxexcloo/redlib` for Linux AMD64 and ARM64.
 
 ## Images
 
 | Image | Upstream | Runtime |
 | --- | --- | --- |
+| Atvloadly | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly) | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
 | BetterBench | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench) | Non-root CLI; mount writable results at `/data` |
 | Redlib | [Nachtalb/redlib](https://github.com/Nachtalb/redlib) | Non-root HTTP service on port 8080 |
 
@@ -29,9 +31,15 @@ mise run check
 Build or test one image:
 
 ```sh
+mise exec -- python scripts/image.py check atvloadly
 mise exec -- python scripts/image.py check betterbench
 mise exec -- python scripts/image.py check redlib
 ```
+
+Atvloadly includes pairing completion and discovery refresh patches, with browser
+and Go regression tests during its build. Its runtime smoke test checks the UI,
+Avahi and D-Bus without LAN access. Deployment requires host networking and
+`seccomp=unconfined` for the upstream signing tools.
 
 BetterBench runs upstream tests during its image build. Smoke tests verify its
 CLI, packaged corpus and writable results directory. Redlib smoke tests verify
@@ -41,7 +49,8 @@ its CLI and local settings endpoint without contacting Reddit.
 
 Pull requests build, test and scan both architectures without publishing.
 Pushes and manual runs on `main` publish verified architecture images, then assemble
-multi-architecture manifests. Tags include `latest`, `sha-<build-commit>` and
+multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
+Tags include `latest`, `sha-<build-commit>` and
 `source-<upstream-commit>`. Pin deployed images by digest.
 
 The repository needs Write access under each existing GHCR package's
@@ -59,4 +68,4 @@ mise exec -- python scripts/image.py lock betterbench
 ## Licence
 
 Build infrastructure uses AGPL-3.0; application sources retain their upstream
-licences: Apache-2.0 for BetterBench and AGPL-3.0-only for Redlib.
+licences: Apache-2.0 for BetterBench and AGPL-3.0-only for Atvloadly and Redlib.
