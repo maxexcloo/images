@@ -13,8 +13,8 @@ receive available security updates. Browser and Go regression tests run in the b
 includes Avahi and D-Bus. Kubernetes deployment remains owned by kubelab.
 
 BetterBench uses the upstream application and a local frozen Python lockfile.
-Redlib initially uses the upstream revision underlying the deployed native ARM
-image, preserving its application code while moving build ownership.
+Redlib uses the upstream revision underlying the deployed native ARM
+image.
 
 ComfyUI ROCm preserves AI’s pinned ROCm base, ComfyUI revision and additional
 dependencies. AI consumes the published digest and retains all runtime configuration.
@@ -23,15 +23,16 @@ startup script and generated monitoring files in a thin deployment image.
 
 ## Verification & Publishing
 
+Build orchestration lives in `.github/scripts/`.
 A shared workflow discovers active recipes from their source files. Each recipe
 builds on its configured native architectures; ComfyUI ROCm is AMD64 only. Manual runs can select one recipe;
 pushes and pull requests verify all active recipes. BetterBench runs upstream tests inside
-the build stage; each image then passes an isolated runtime smoke test and a
-vulnerability scan. Only verified builds on `main` publish architecture tags.
+the build stage; each image then passes a vulnerability scan. Only verified builds
+on `main` publish architecture tags.
 
-A dependent publishing job assembles the two architecture digests for each image
+A dependent publishing job assembles the configured architecture digests for each image
 into `latest`, build-commit and source-commit manifests. Existing package names
-are retained. Provenance, SBOMs and licence metadata accompany published images.
+are retained. Provenance and SBOMs accompany published images.
 
-Local Mise checks run the same recipes and smoke tests on the host architecture.
+Local Mise checks run the same recipes on the host architecture.
 Remote CI establishes both architecture support and registry publishing.

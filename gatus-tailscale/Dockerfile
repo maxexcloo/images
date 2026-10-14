@@ -25,8 +25,6 @@ WORKDIR /app
 COPY --from=gatus /gatus gatus
 COPY --from=tailscale /tailscaled tailscaled
 COPY --from=tailscale /tailscale tailscale
-COPY --from=upstream /LICENSE /usr/share/licenses/gatus/LICENSE
-COPY --from=tailscale /source/LICENSE /usr/share/licenses/tailscale/LICENSE
 ENV GATUS_CONFIG_PATH=/app/config
 EXPOSE 8080
 ENTRYPOINT ["/app/gatus"]

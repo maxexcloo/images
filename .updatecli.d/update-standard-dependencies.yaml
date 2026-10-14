@@ -4,8 +4,5 @@ pipelineid: update-standard-dependencies
 autodiscovery:
   crawlers:
     dockerfile:
-      ignore:
-        - path: caddy/*
-        - path: gatus/*
 labels:
   group: standard
