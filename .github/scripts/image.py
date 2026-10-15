@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -40,27 +41,106 @@ def source(name):
     return data
 
 
+def affected_images(names, changed_files):
+    selected = set()
+    metadata = {
+        ".gitignore",
+        ".mise.toml",
+        "AGENTS.md",
+        "ARCHITECTURE.md",
+        "LICENSE",
+        "README.md",
+    }
+    for path in changed_files:
+        name = path.split("/", 1)[0]
+        if name in names:
+            selected.add(name)
+        elif path not in metadata and not path.startswith((".updatecli.d/", "docs/")):
+            return set(names)
+    return selected
+
+
+def matrix(image="all", changed_files=None):
+    # Validate every recipe even when only metadata changed.
+    catalogue = {name: dict(image=name, **source(name)) for name in images()}
+    if image != "all" and image not in catalogue:
+        raise ValueError(f"Unknown image: {image}")
+    selected = set(catalogue) if image == "all" else {image}
+    if changed_files is not None:
+        selected &= affected_images(catalogue, changed_files)
+    recipes = [catalogue[name] for name in sorted(selected)]
+    return {
+        "required": bool(recipes),
+        "include": recipes,
+        "build": [
+            {"architecture": architecture, "recipe": recipe}
+            for recipe in recipes
+            for architecture in recipe["architectures"]
+        ],
+    }
+
+
+def changes_since(revision):
+    if not revision or revision == "0" * 40:
+        return None
+    # A delayed run must not overwrite a newer successful publication.
+    if subprocess.run(
+        ["git", "merge-base", "--is-ancestor", "HEAD", revision], cwd=ROOT
+    ).returncode == 0:
+        return []
+    return subprocess.check_output(
+        ["git", "diff", "--name-only", "--no-renames", revision, "HEAD"],
+        cwd=ROOT,
+        text=True,
+    ).splitlines()
+
+
+def results_succeeded(prepare, build, publish, required, publishing):
+    if (
+        prepare != "success"
+        or required not in {"true", "false"}
+        or publishing not in {"true", "false"}
+    ):
+        return False
+    expected_build = "success" if required == "true" else "skipped"
+    expected_publish = (
+        "success" if required == "true" and publishing == "true" else "skipped"
+    )
+    return build == expected_build and publish == expected_publish
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["build", "lock", "matrix"])
+    parser.add_argument("action", choices=["build", "lock", "matrix", "verify"])
     parser.add_argument("image", default="all", nargs="?")
+    parser.add_argument("--changed-from")
     parser.add_argument("--platform")
     parser.add_argument("--tag")
     args = parser.parse_args()
+    if args.action == "verify":
+        if not results_succeeded(
+            *(
+                os.environ.get(name, "")
+                for name in (
+                    "PREPARE_RESULT",
+                    "BUILD_RESULT",
+                    "PUBLISH_RESULT",
+                    "BUILD_REQUIRED",
+                    "PUBLISH_REQUIRED",
+                )
+            )
+        ):
+            raise SystemExit(
+                "Required image preparation, build or publishing did not succeed"
+            )
+        return
+    if args.action == "matrix":
+        changed_files = changes_since(args.changed_from)
+        print(json.dumps(matrix(args.image, changed_files)))
+        return
     selected = images() if args.image == "all" else [args.image]
     if args.tag and len(selected) != 1:
         parser.error("--tag requires a single image")
-    if args.action == "matrix":
-        recipes = [dict(image=name, **source(name)) for name in selected]
-        print(json.dumps({
-            "include": recipes,
-            "build": [
-                {"architecture": architecture, "recipe": recipe}
-                for recipe in recipes
-                for architecture in recipe["architectures"]
-            ],
-        }))
-        return
     platform = args.platform
     if args.action == "build" and platform is None:
         platform = subprocess.check_output([
