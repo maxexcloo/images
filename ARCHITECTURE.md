@@ -17,7 +17,7 @@ Redlib uses the upstream revision underlying the deployed native ARM
 image.
 
 ComfyUI ROCm preserves AI’s pinned ROCm base, ComfyUI revision and additional
-dependencies. AI consumes the published digest and retains all runtime configuration.
+dependencies. Vendor security updates refresh Python 3.13 without replacing ROCm or Torch. AI consumes the published digest and retains all runtime configuration.
 Gatus/Tailscale packages the upstream binaries; Flylab retains its credential-consuming
 startup script and generated monitoring files in a thin deployment image.
 
