@@ -26,7 +26,8 @@ startup script and generated monitoring files in a thin deployment image.
 Build orchestration lives in `.github/scripts/`.
 The preparation job discovers active recipes from their source files. Each recipe
 builds on its configured native architectures; ComfyUI ROCm is AMD64 only. Manual runs can select one recipe;
-pushes and pull requests verify all active recipes. BetterBench runs upstream tests inside
+pushes and pull requests verify changed recipes. Shared pipeline changes select all recipes;
+metadata-only changes skip builds after configuration and selection checks. BetterBench runs upstream tests inside
 the build stage; each image then passes a vulnerability scan. Only verified builds
 on `main` publish architecture tags.
 
