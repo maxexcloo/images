@@ -49,7 +49,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY --from=runtime /runtime-packages /tmp/runtime-packages
 RUN apt-get update -o APT::Update::Error-Mode=any \
     && apt-get install --no-install-recommends -y $(cat /tmp/runtime-packages) \
-        bc cpio curl fdisk file genisoimage gzip iproute2 jq libasound2-plugins libgbm1 mtools \
+        bc cpio curl dnsmasq-base fdisk file genisoimage gzip ipcalc iproute2 jq libasound2-plugins libgbm1 mtools \
         netcat-openbsd openbox p7zip-full procps pulseaudio-utils python3 spirv-tools tigervnc-viewer \
         tini unzip util-linux vulkan-tools wget xar xmlstarlet xxd xz-utils \
     && rm -rf /var/lib/apt/lists/* /tmp/runtime-packages
@@ -87,7 +87,7 @@ RUN ldconfig \
     && qemu-system-x86_64 -device reims-vgpu-pci,help >/dev/null \
     && LD_BIND_NOW=1 qemu-system-x86_64 --version \
     && command -v vncviewer \
-    && command -v air-dis mformat nc pactl sfdisk xar xmlstarlet xxd \
+    && command -v air-dis dnsmasq ipcalc mformat nc pactl sfdisk xar xmlstarlet xxd \
     && qemu-system-x86_64 -audio driver=help 2>&1 | grep -qx alsa \
     && ! ldd /usr/bin/qemu-system-x86_64 /usr/bin/qemu-img /usr/local/bin/air-dis | grep 'not found' \
     && bash -n /usr/local/bin/start-macos /usr/local/lib/macos/*.sh /etc/service/macos-console/run \
@@ -97,7 +97,7 @@ ENV AUDIO=N \
     CPU_CORES=4 \
     DISK_SIZE=64G \
     GPU=Y \
-    NETWORK=user \
+    NETWORK=slirp \
     PASSWD="" \
     RAM_SIZE=4G \
     SELKIES_ENABLE_BASIC_AUTH=true \

@@ -48,7 +48,8 @@ to format the virtual disk and install macOS. Download progress appears in
   sufficient writable storage for the configured disk and installer.
 
 No host packages, kernel modules, sysctls or device permissions are changed by the
-image. `NETWORK=user` avoids requiring `/dev/net/tun` or `NET_ADMIN`. Devices and
+image. `NETWORK=slirp` uses QEMU's user-mode networking and avoids requiring
+`/dev/net/tun` or `NET_ADMIN`. Devices and
 host kernel support still have to exist: container packaging cannot supply them.
 If a selected Reims version or GPU needs `/dev/udmabuf`, load it through the host's
 supported configuration and add that device mapping. Likewise, an insufficient
@@ -99,7 +100,9 @@ grace period; do not interrupt storage while a guest is running.
 `source.json` pins Dockur. The Dockerfile pins both base image digests and the
 QEMU release's executable, Reims firmware and shader-tool checksums. Keep those
 three release artefacts together when updating `QEMU_VERSION`. The functional
-startup hook lives in `patches/console.patch`. OpenCore, VMHide and OSX-KVM
+startup hook lives in `patches/console.patch`. `patches/vulkan.patch` keeps Dockur's
+display selector out of the headless Vulkan probe; otherwise `DISPLAY=vnc`
+causes GPU detection to fail. OpenCore, VMHide and OSX-KVM
 firmware use fixed upstream versions or revisions. Updatecli previews Dockur
 source and base-image updates locally for manual review.
 
