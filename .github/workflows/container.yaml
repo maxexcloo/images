@@ -1,6 +1,7 @@
 name: Container
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       image:
@@ -174,3 +175,17 @@ jobs:
             --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" \
             "$@"
           docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
+
+  check:
+    name: Check
+    if: always()
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Build & Publishing Results
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$PUBLISH_RESULT" = success || test "$PUBLISH_RESULT" = skipped
