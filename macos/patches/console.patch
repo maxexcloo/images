@@ -1,5 +1,10 @@
 --- a/run/entry.sh
 +++ b/run/entry.sh
+@@ -28,3 +28,3 @@
+ . display.sh    # Initialize graphics
+-. audio.sh      # Initialize audio
++# Guest audio is initialised by the Selkies console hook below.
+ . network.sh    # Initialize network
 @@ -36,2 +36,3 @@
  . config.sh     # Configure arguments
 +. /usr/local/lib/macos/console.sh

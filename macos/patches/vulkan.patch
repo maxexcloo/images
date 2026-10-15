@@ -1,0 +1,7 @@
+--- a/run/display.sh
++++ b/run/display.sh
+@@ -104,3 +104,3 @@
+ VULKAN_SUMMARY=""
+-if ! VULKAN_SUMMARY="$(vulkaninfo --summary 2>&1)"; then
++if ! VULKAN_SUMMARY="$(env -u DISPLAY -u WAYLAND_DISPLAY vulkaninfo --summary 2>&1)"; then
+   enabled "$DEBUG" && printf '%s\n' "$VULKAN_SUMMARY"
