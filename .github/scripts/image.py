@@ -3,12 +3,8 @@
 
 import argparse
 import json
-import os
 import re
-import shutil
 import subprocess
-import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,10 +12,6 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def images():
     return sorted(path.parent.name for path in ROOT.glob("*/source.json"))
-
-
-def run(*command):
-    subprocess.run(command, check=True, cwd=ROOT)
 
 
 def source(name):
@@ -44,10 +36,10 @@ def source(name):
 def affected_images(names, changed_files):
     selected = set()
     metadata = {
+        ".github/scripts/updates.py",
         ".gitignore",
         ".mise.toml",
         "AGENTS.md",
-        "ARCHITECTURE.md",
         "LICENSE",
         "README.md",
     }
@@ -95,45 +87,14 @@ def changes_since(revision):
     ).splitlines()
 
 
-def results_succeeded(prepare, build, publish, required, publishing):
-    if (
-        prepare != "success"
-        or required not in {"true", "false"}
-        or publishing not in {"true", "false"}
-    ):
-        return False
-    expected_build = "success" if required == "true" else "skipped"
-    expected_publish = (
-        "success" if required == "true" and publishing == "true" else "skipped"
-    )
-    return build == expected_build and publish == expected_publish
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["build", "lock", "matrix", "verify"])
+    parser.add_argument("action", choices=["build", "matrix"])
     parser.add_argument("image", default="all", nargs="?")
     parser.add_argument("--changed-from")
     parser.add_argument("--platform")
     parser.add_argument("--tag")
     args = parser.parse_args()
-    if args.action == "verify":
-        if not results_succeeded(
-            *(
-                os.environ.get(name, "")
-                for name in (
-                    "PREPARE_RESULT",
-                    "BUILD_RESULT",
-                    "PUBLISH_RESULT",
-                    "BUILD_REQUIRED",
-                    "PUBLISH_REQUIRED",
-                )
-            )
-        ):
-            raise SystemExit(
-                "Required image preparation, build or publishing did not succeed"
-            )
-        return
     if args.action == "matrix":
         changed_files = changes_since(args.changed_from)
         print(json.dumps(matrix(args.image, changed_files)))
@@ -142,7 +103,7 @@ def main():
     if args.tag and len(selected) != 1:
         parser.error("--tag requires a single image")
     platform = args.platform
-    if args.action == "build" and platform is None:
+    if platform is None:
         platform = subprocess.check_output([
             "docker", "info", "--format", "{{.OSType}}/{{.Architecture}}",
         ], text=True).strip()
@@ -154,36 +115,19 @@ def main():
                 print(f"Skipping {name}: {platform} is outside its configured architectures.")
                 continue
             raise ValueError(f"{name} does not support {platform}")
-        if args.action == "lock":
-            if name != "betterbench":
-                parser.error("Only BetterBench has a local dependency lockfile")
-            with tempfile.TemporaryDirectory(prefix="images-source-") as temporary:
-                subprocess.run(["git", "init", temporary], check=True)
-                subprocess.run([
-                    "git", "-C", temporary, "fetch", "--depth", "1",
-                    f"https://github.com/{data['repository']}.git", data["revision"],
-                ], check=True)
-                subprocess.run([
-                    "git", "-C", temporary, "checkout", "--detach", "FETCH_HEAD",
-                ], check=True)
-                shutil.copyfile(ROOT / name / "uv.lock", Path(temporary) / "uv.lock")
-                run("uv", "lock", "--directory", temporary, "--python", sys.executable)
-                shutil.copyfile(Path(temporary) / "uv.lock", ROOT / name / "uv.lock")
-            continue
         tag = args.tag or f"images-{name}:test"
-        if args.action == "build":
-            command = [
-                "docker", "buildx", "build",
-                "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
-                "--build-arg", f"UPSTREAM_REVISION={data['revision']}",
-                "--build-context",
-                f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
-                "--load",
-            ]
-            if args.platform:
-                command.extend(["--platform", args.platform])
-            command.extend(["--tag", tag, name])
-            run(*command)
+        command = [
+            "docker", "buildx", "build",
+            "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
+            "--build-arg", f"UPSTREAM_REVISION={data['revision']}",
+            "--build-context",
+            f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
+            "--load",
+        ]
+        if args.platform:
+            command.extend(["--platform", args.platform])
+        command.extend(["--tag", tag, name])
+        subprocess.run(command, check=True, cwd=ROOT)
 
 
 if __name__ == "__main__":

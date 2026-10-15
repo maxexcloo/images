@@ -1,0 +1,28 @@
+services:
+  macos:
+    image: ghcr.io/maxexcloo/macos:latest
+    restart: unless-stopped
+    shm_size: 2gb
+    stop_grace_period: 2m
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/kvm:/dev/kvm
+    environment:
+      CPU_CORES: "4"
+      DISK_SIZE: "64G"
+      RAM_SIZE: "4G"
+      SELKIES_BASIC_AUTH_PASSWORD_FILE: /run/secrets/browser-password
+      VERSION: "15"
+    ports:
+      - "${MACOS_LISTEN_ADDRESS:-127.0.0.1}:8080:8080"
+    secrets:
+      - browser-password
+    volumes:
+      - macos:/storage
+
+secrets:
+  browser-password:
+    file: ./browser-password
+
+volumes:
+  macos:

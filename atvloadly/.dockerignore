@@ -1,7 +1,5 @@
 *
-!tests/
-!tests/**
+!patches/
+!patches/**
 !config.yaml
-!reliability.patch
-!security.patch
 !start.sh

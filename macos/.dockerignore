@@ -1,0 +1,9 @@
+**
+!patches/
+!patches/**
+!services/
+!services/**
+!Dockerfile
+!console.sh
+!health.sh
+!start.sh

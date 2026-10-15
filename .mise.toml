@@ -2,7 +2,6 @@
 # gh = "latest"
 # python = "latest"
 # updatecli = "latest"
-# uv = "latest"
 actionlint = "1.7.12"
 
 # Development
@@ -19,10 +18,14 @@ run = "python .github/scripts/image.py build"
 description = "Format The Mise Configuration"
 run = "mise fmt"
 
+[tasks.updates]
+description = "Review Discovered Dependency Updates"
+run = "python -B .github/scripts/updates.py {{arg(name='action', default='diff')}}"
+
 [tasks.validate]
 description = "Validate Repository Configuration"
 run = """
-updatecli manifest validate --config .updatecli.d --disable-templating --strict
+python -B .github/scripts/updates.py validate
 mise fmt --check
 python -B -m unittest discover --pattern 'test_*.py' --start-directory .github/scripts
 actionlint -shellcheck="" .github/workflows/container.yaml
