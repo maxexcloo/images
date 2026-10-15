@@ -58,8 +58,10 @@ core, models and separate Normal/NSFW state remain owned by AI.
 
 ## Publishing
 
-Pull requests build and scan each recipe’s configured architectures without publishing.
-Pushes and manual runs on `main` publish verified architecture images, then assemble
+Pull requests build and scan changed recipes on their configured architectures without publishing.
+Shared pipeline changes rebuild all recipes; metadata-only changes validate configuration
+and skip image builds. Required checks always report.
+Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Tags include `latest`, `sha-<build-commit>` and
 `source-<upstream-commit>`. Pin deployed images by digest.
