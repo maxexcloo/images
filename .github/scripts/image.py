@@ -80,6 +80,21 @@ def matrix(image="all", changed_files=None):
     }
 
 
+def changes_since(revision):
+    if not revision or revision == "0" * 40:
+        return None
+    # A delayed run must not overwrite a newer successful publication.
+    if subprocess.run(
+        ["git", "merge-base", "--is-ancestor", "HEAD", revision], cwd=ROOT
+    ).returncode == 0:
+        return []
+    return subprocess.check_output(
+        ["git", "diff", "--name-only", "--no-renames", revision, "HEAD"],
+        cwd=ROOT,
+        text=True,
+    ).splitlines()
+
+
 def results_succeeded(prepare, build, publish, required, publishing):
     if (
         prepare != "success"
@@ -120,20 +135,7 @@ def main():
             )
         return
     if args.action == "matrix":
-        changed_files = None
-        if args.changed_from and args.changed_from != "0" * 40:
-            changed_files = subprocess.check_output(
-                [
-                    "git",
-                    "diff",
-                    "--name-only",
-                    "--no-renames",
-                    args.changed_from,
-                    "HEAD",
-                ],
-                cwd=ROOT,
-                text=True,
-            ).splitlines()
+        changed_files = changes_since(args.changed_from)
         print(json.dumps(matrix(args.image, changed_files)))
         return
     selected = images() if args.image == "all" else [args.image]
