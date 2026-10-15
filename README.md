@@ -52,12 +52,13 @@ and Go regression tests run during its build. Deployment requires host networkin
 BetterBench runs upstream tests during its image build. Redlib HTTP readiness
 requires successful Reddit OAuth and belongs to live deployment verification.
 
+ComfyUI applies vendor Python 3.13 security updates within its pinned ROCm base.
 Verify ComfyUI GPU compatibility on Bento before changing its image pin; its saved
 core, models and separate Normal/NSFW state remain owned by AI.
 
 ## Publishing
 
-Pull requests provide source review. Image builds and scans run after merging.
+Pull requests build and scan each recipe’s configured architectures without publishing.
 Pushes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Tags include `latest`, `sha-<build-commit>` and

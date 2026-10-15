@@ -17,7 +17,7 @@ Redlib uses the upstream revision underlying the deployed native ARM
 image.
 
 ComfyUI ROCm preserves AI’s pinned ROCm base, ComfyUI revision and additional
-dependencies. AI consumes the published digest and retains all runtime configuration.
+dependencies. Vendor security updates refresh Python 3.13 without replacing ROCm or Torch. AI consumes the published digest and retains all runtime configuration.
 Gatus/Tailscale packages the upstream binaries; Flylab retains its credential-consuming
 startup script and generated monitoring files in a thin deployment image.
 
@@ -26,7 +26,7 @@ startup script and generated monitoring files in a thin deployment image.
 Build orchestration lives in `.github/scripts/`.
 The preparation job discovers active recipes from their source files. Each recipe
 builds on its configured native architectures; ComfyUI ROCm is AMD64 only. Manual runs can select one recipe;
-pushes to `main` build all active recipes. BetterBench runs upstream tests inside
+pushes and pull requests verify all active recipes. BetterBench runs upstream tests inside
 the build stage; each image then passes a vulnerability scan. Only verified builds
 on `main` publish architecture tags.
 

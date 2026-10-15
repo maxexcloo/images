@@ -3,6 +3,13 @@ FROM docker.io/yanwk/comfyui-boot:rocm@sha256:b9573d1176e636380fbb6a5af008e54324
 
 ARG UPSTREAM_REFERENCE
 ARG UPSTREAM_REVISION
+
+# Apply vendor fixes and retain the base image’s system pip installation support.
+RUN zypper --non-interactive refresh \
+    && zypper --non-interactive update --no-recommends python313 python313-dbm \
+    && zypper clean --all \
+    && python3 -c 'import pathlib, sysconfig; pathlib.Path(sysconfig.get_path("stdlib"), "EXTERNALLY-MANAGED").unlink(missing_ok=True)'
+
 RUN git -C /default-comfyui-bundle/ComfyUI fetch --depth 1 origin "$UPSTREAM_REVISION" \
     && git -C /default-comfyui-bundle/ComfyUI checkout --detach "$UPSTREAM_REVISION" \
     && PIP_USER=false python3 -m pip install --no-cache-dir --requirement /default-comfyui-bundle/ComfyUI/requirements.txt
