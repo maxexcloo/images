@@ -1,8 +1,14 @@
 """Exercise recipe selection and the required build/publishing gate."""
 
+import shutil
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
-from image import matrix, results_succeeded
+import image
+from image import changes_since, matrix, results_succeeded
 
 
 class MatrixTests(unittest.TestCase):
@@ -47,6 +53,65 @@ class MatrixTests(unittest.TestCase):
     def test_unknown_manual_recipe_fails(self):
         with self.assertRaises(ValueError):
             matrix("not-a-recipe")
+
+
+class PublicationBaselineTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        for name in image.images():
+            (self.root / name).mkdir()
+            shutil.copy(
+                image.ROOT / name / "source.json", self.root / name / "source.json"
+            )
+        self.git("init", "--quiet")
+        self.commit()
+        self.base = self.git("rev-parse", "HEAD")
+        self.patch = patch("image.ROOT", self.root)
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def git(self, *arguments):
+        return subprocess.check_output(
+            ["git", "-C", str(self.root), *arguments], text=True
+        ).strip()
+
+    def commit(self):
+        self.git("add", ".")
+        self.git(
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "Fixture",
+        )
+
+    def test_metadata_after_pending_runtime_still_builds_runtime(self):
+        (self.root / "redlib" / "Dockerfile").write_text("Changed runtime")
+        self.commit()
+        (self.root / "README.md").write_text("Later metadata")
+        self.commit()
+        result = matrix(changed_files=changes_since(self.base))
+        self.assertEqual([recipe["image"] for recipe in result["include"]], ["redlib"])
+
+    def test_delayed_old_run_cannot_overwrite_newer_publication(self):
+        (self.root / "redlib" / "Dockerfile").write_text("Newer runtime")
+        self.commit()
+        published = self.git("rev-parse", "HEAD")
+        self.git("checkout", "--quiet", self.base)
+        self.assertFalse(matrix(changed_files=changes_since(published))["required"])
+
+    def test_no_successful_baseline_builds_all(self):
+        self.assertTrue(matrix(changed_files=changes_since(""))["required"])
+        self.assertTrue(matrix(changed_files=changes_since("0" * 40))["required"])
 
 
 class ResultTests(unittest.TestCase):
