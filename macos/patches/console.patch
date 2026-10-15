@@ -1,0 +1,6 @@
+--- a/run/entry.sh
++++ b/run/entry.sh
+@@ -36,2 +36,3 @@
+ . config.sh     # Configure arguments
++. /usr/local/lib/macos/console.sh
+ . finish.sh     # Finish initialization

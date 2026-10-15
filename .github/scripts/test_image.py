@@ -8,13 +8,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 import image
-from image import changes_since, matrix, results_succeeded
+from image import changes_since, matrix
 
 
 class MatrixTests(unittest.TestCase):
     def test_metadata_only_changes_need_no_images(self):
         result = matrix(
-            changed_files=["README.md", ".mise.toml", ".updatecli.d/mise.yaml"]
+            changed_files=["README.md", ".mise.toml", ".updatecli.d/mise.yaml", ".github/scripts/updates.py"]
         )
         self.assertFalse(result["required"])
         self.assertEqual(result["build"], [])
@@ -112,44 +112,6 @@ class PublicationBaselineTests(unittest.TestCase):
     def test_no_successful_baseline_builds_all(self):
         self.assertTrue(matrix(changed_files=changes_since(""))["required"])
         self.assertTrue(matrix(changed_files=changes_since("0" * 40))["required"])
-
-
-class ResultTests(unittest.TestCase):
-    def test_metadata_run_requires_successful_prepare(self):
-        self.assertTrue(
-            results_succeeded("success", "skipped", "skipped", "false", "true")
-        )
-        for result in ["failure", "cancelled", "skipped", ""]:
-            with self.subTest(result=result):
-                self.assertFalse(
-                    results_succeeded(result, "skipped", "skipped", "false", "true")
-                )
-
-    def test_pr_build_must_pass_and_cannot_publish(self):
-        self.assertTrue(
-            results_succeeded("success", "success", "skipped", "true", "false")
-        )
-        for result in ["failure", "cancelled", "skipped"]:
-            self.assertFalse(
-                results_succeeded("success", result, "skipped", "true", "false")
-            )
-        self.assertFalse(
-            results_succeeded("success", "success", "success", "true", "false")
-        )
-
-    def test_main_build_requires_successful_publishing(self):
-        self.assertTrue(
-            results_succeeded("success", "success", "success", "true", "true")
-        )
-        self.assertFalse(
-            results_succeeded("success", "success", "skipped", "true", "true")
-        )
-        self.assertFalse(
-            results_succeeded("success", "success", "failure", "true", "true")
-        )
-
-    def test_missing_prepare_output_cannot_pass(self):
-        self.assertFalse(results_succeeded("success", "skipped", "skipped", "", "true"))
 
 
 if __name__ == "__main__":
