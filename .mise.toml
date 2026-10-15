@@ -24,5 +24,6 @@ description = "Validate Repository Configuration"
 run = """
 updatecli manifest validate --config .updatecli.d --disable-templating --strict
 mise fmt --check
+python -B -m unittest discover --pattern 'test_*.py' --start-directory .github/scripts
 actionlint -shellcheck="" .github/workflows/container.yaml
 """
