@@ -69,7 +69,7 @@ connects QEMU to Selkies; no host desktop or streaming service is required.
 
 ## Publishing
 
-Pull requests build and scan changed recipes on their configured architectures without publishing.
+Pull requests build changed recipes on their configured architectures without publishing.
 Shared pipeline changes rebuild all recipes; metadata-only changes validate configuration
 and skip image builds. Required checks always report.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
