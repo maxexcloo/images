@@ -4,7 +4,8 @@ set -euo pipefail
 until [ -f "$XDG_RUNTIME_DIR/container-env" ]; do sleep 0.5; done
 # shellcheck source=/dev/null
 . "$XDG_RUNTIME_DIR/container-env"
-until xdpyinfo >/dev/null 2>&1 && [ -S /run/shm/macos-vnc.sock ]; do sleep 0.5; done
+until xdpyinfo >/dev/null 2>&1 && [ -S /run/shm/macos-vnc.sock ] \
+    && [ -w /run/shm/macos-vnc.sock ]; do sleep 0.5; done
 
 openbox --sm-disable &
 manager=$!
