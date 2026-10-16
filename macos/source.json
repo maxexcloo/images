@@ -1,7 +1,7 @@
 {
   "reference": "master",
-  "repository": "dockur/macos",
-  "revision": "16a5b470cdd601bae8b05b02d748d7edfb36c12e",
+  "repository": "steelbrain/reims-vgpu",
+  "revision": "86d492197228df29514a87c3de62b2ce59f2188f",
   "architectures": [
     "amd64"
   ]
