@@ -20,8 +20,13 @@ def source(name):
     data = json.loads((ROOT / name / "source.json").read_text())
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", data["repository"]):
         raise ValueError(f"Invalid upstream repository for {name}")
-    if not re.fullmatch(r"[0-9a-f]{40}", data["revision"]):
-        raise ValueError(f"Invalid pinned revision for {name}")
+    if "reference" in data or "revision" in data:
+        if (
+            not isinstance(data.get("reference"), str)
+            or not data["reference"]
+            or not re.fullmatch(r"[0-9a-f]{40}", data.get("revision", ""))
+        ):
+            raise ValueError(f"Invalid pinned source for {name}")
     architectures = data.setdefault("architectures", ["amd64", "arm64"])
     if (
         not isinstance(architectures, list)
@@ -116,14 +121,15 @@ def main():
                 continue
             raise ValueError(f"{name} does not support {platform}")
         tag = args.tag or f"images-{name}:test"
-        command = [
-            "docker", "buildx", "build",
-            "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
-            "--build-arg", f"UPSTREAM_REVISION={data['revision']}",
-            "--build-context",
-            f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
-            "--load",
-        ]
+        command = ["docker", "buildx", "build"]
+        if "revision" in data:
+            command.extend([
+                "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
+                "--build-arg", f"UPSTREAM_REVISION={data['revision']}",
+                "--build-context",
+                f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
+            ])
+        command.append("--load")
         if args.platform:
             command.extend(["--platform", args.platform])
         command.extend(["--tag", tag, name])

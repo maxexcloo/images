@@ -1,5 +1,6 @@
 """Exercise recipe selection and the required build/publishing gate."""
 
+import json
 import shutil
 import subprocess
 import tempfile
@@ -8,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import image
+import updates
 from image import changes_since, matrix
 
 
@@ -21,11 +23,11 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(result["include"], [])
 
     def test_one_recipe_selects_all_its_architectures(self):
-        for path in ["redlib/Dockerfile", "redlib/source.json"]:
+        for path in ["gatus-tailscale/Dockerfile", "gatus-tailscale/source.json"]:
             with self.subTest(path=path):
                 result = matrix(changed_files=[path])
                 self.assertEqual(
-                    [recipe["image"] for recipe in result["include"]], ["redlib"]
+                    [recipe["image"] for recipe in result["include"]], ["gatus-tailscale"]
                 )
                 self.assertEqual(
                     {build["architecture"] for build in result["build"]},
@@ -49,6 +51,30 @@ class MatrixTests(unittest.TestCase):
             [build["architecture"] for build in result["build"]], ["amd64"]
         )
         self.assertGreater(len(matrix()["include"]), 1)
+
+    def test_image_only_recipe_has_no_git_update(self):
+        recipe = matrix("gatus-tailscale")["include"][0]
+        self.assertNotIn("revision", recipe)
+        self.assertNotIn("reference", recipe)
+        git_updates = {
+            manifest["pipelineid"] for manifest in updates.manifests()
+            if manifest["labels"]["group"] == "git"
+        }
+        self.assertNotIn("update-git-gatus-tailscale", git_updates)
+        self.assertIn("update-git-atvloadly", git_updates)
+
+    def test_partial_git_pin_fails(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "example").mkdir()
+            for data in [
+                {"repository": "owner/project", "reference": "main"},
+                {"repository": "owner/project", "revision": "a" * 40},
+            ]:
+                with self.subTest(data=data), patch("image.ROOT", root):
+                    (root / "example" / "source.json").write_text(json.dumps(data))
+                    with self.assertRaises(ValueError):
+                        image.source("example")
 
     def test_unknown_manual_recipe_fails(self):
         with self.assertRaises(ValueError):
@@ -95,15 +121,15 @@ class PublicationBaselineTests(unittest.TestCase):
         )
 
     def test_metadata_after_pending_runtime_still_builds_runtime(self):
-        (self.root / "redlib" / "Dockerfile").write_text("Changed runtime")
+        (self.root / "gatus-tailscale" / "Dockerfile").write_text("Changed runtime")
         self.commit()
         (self.root / "README.md").write_text("Later metadata")
         self.commit()
         result = matrix(changed_files=changes_since(self.base))
-        self.assertEqual([recipe["image"] for recipe in result["include"]], ["redlib"])
+        self.assertEqual([recipe["image"] for recipe in result["include"]], ["gatus-tailscale"])
 
     def test_delayed_old_run_cannot_overwrite_newer_publication(self):
-        (self.root / "redlib" / "Dockerfile").write_text("Newer runtime")
+        (self.root / "gatus-tailscale" / "Dockerfile").write_text("Newer runtime")
         self.commit()
         published = self.git("rev-parse", "HEAD")
         self.git("checkout", "--quiet", self.base)

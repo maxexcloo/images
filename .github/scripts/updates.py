@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Discover recipe updates and run Updatecli for local review."""
+"""Discover recipe Updatecli manifests."""
 
 import argparse
 import re
 import shlex
-import subprocess
-import tempfile
 from pathlib import Path
 
 from image import ROOT, images, source
@@ -58,7 +56,8 @@ def source_manifest(name, repository, reference, path):
 def manifests():
     for name in images():
         data = source(name)
-        yield source_manifest(name, data['repository'], data['reference'], Path(name) / 'source.json')
+        if 'revision' in data:
+            yield source_manifest(name, data['repository'], data['reference'], Path(name) / 'source.json')
         path = Path(name) / 'Dockerfile'
         text = (ROOT / path).read_text()
         for package in sorted(set(re.findall(r'\b([\w.-]+)==[0-9][\w.+!-]*', text))):
@@ -100,16 +99,11 @@ def yaml_lines(value, indent=0):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['apply', 'diff', 'show', 'validate'], default='diff', nargs='?')
-    args, extra = parser.parse_known_args()
-    with tempfile.TemporaryDirectory(prefix='images-updates-') as temporary:
-        for index, manifest in enumerate(manifests()):
-            (Path(temporary) / f'{index:03}.yaml').write_text('\n'.join(yaml_lines(manifest)) + '\n')
-        command = ['updatecli', 'manifest' if args.action in {'show', 'validate'} else 'pipeline', args.action]
-        command += ['--config', '.updatecli.d', '--config', temporary]
-        if args.action == 'validate':
-            command += ['--disable-templating', '--strict']
-        subprocess.run([*command, *extra], check=True, cwd=ROOT)
+    parser.add_argument('directory', type=Path)
+    args = parser.parse_args()
+    args.directory.mkdir(exist_ok=True, parents=True)
+    for index, manifest in enumerate(manifests()):
+        (args.directory / f'{index:03}.yaml').write_text('\n'.join(yaml_lines(manifest)) + '\n')
 
 
 if __name__ == '__main__':

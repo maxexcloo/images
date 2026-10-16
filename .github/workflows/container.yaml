@@ -2,14 +2,14 @@ name: Container
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       image:
         default: all
         description: Image recipe to build, or all
         type: string
-  push:
-    branches: [main]
 
 permissions:
   actions: read
@@ -32,8 +32,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Test Build Selection
-        run: python3 -B -m unittest discover --pattern 'test_*.py' --start-directory .github/scripts
+      - name: Set Up Shared Tools & Tasks
+        uses: maxexcloo/dotfiles/.github/actions/mise@main
+      - name: Run Checks
+        run: mise run check
       - id: recipes
         name: Discover Recipes
         env:
@@ -65,25 +67,25 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Prepare Space for ROCm
+      - name: Prepare Space For ROCm
         if: matrix.recipe.image == 'comfyui-rocm'
         run: |
           sudo rm --force --recursive /opt/ghc /usr/local/lib/android /usr/share/dotnet
           df -h /
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
-      - name: Build Image for Verification
+      - name: Build Image For Verification
         uses: docker/build-push-action@v7
         with:
           build-args: &source-arguments |
             UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
             UPSTREAM_REVISION=${{ matrix.recipe.revision }}
-          build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
+          build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
           cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
           labels: &image-labels |
-            org.opencontainers.image.revision=${{ matrix.recipe.revision }}
+            org.opencontainers.image.revision=${{ matrix.recipe.revision || github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
           load: true
@@ -102,7 +104,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           build-args: *source-arguments
-          build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
+          build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           context: ./${{ matrix.recipe.image }}
           labels: *image-labels
           platforms: linux/${{ matrix.architecture }}
@@ -164,10 +166,12 @@ jobs:
             digest=$(cat "digests/$architecture")
             set -- "$@" "$IMAGE_NAME@$digest"
           done
+          if [ -n "$UPSTREAM_REVISION" ]; then
+            set -- --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" "$@"
+          fi
           docker buildx imagetools create \
             --tag "$IMAGE_NAME:latest" \
             --tag "$IMAGE_NAME:sha-$BUILD_REVISION" \
-            --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" \
             "$@"
           docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
 

@@ -1,5 +1,4 @@
 *
-!patches/
-!patches/**
 !config.yaml
+!patches/
 !start.sh
