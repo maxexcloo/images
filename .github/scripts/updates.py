@@ -34,22 +34,28 @@ def source_manifest(name, repository, reference, path):
             },
         }
         targets["reference"] = pin_target(path, "reference", "version")
-    ref = '{{ source "version" }}' if release else reference
-    namespace = "tags" if release else "heads"
-    refs = f'"refs/{namespace}/$UPDATE_REFERENCE"'
-    if release:
-        refs += ' "refs/tags/$UPDATE_REFERENCE^{}"'
-    sources["revision"] = {
-        "kind": "shell",
-        "spec": {
-            "command": (
-                "set -eu\n"
-                f"revisions=$(git ls-remote --exit-code {shlex.quote('https://github.com/' + repository + '.git')} {refs})\n"
-                'printf "%s\\n" "$revisions" | tail -n 1 | cut -f 1'
-            ),
-            "environments": [{"name": "UPDATE_REFERENCE", "value": ref}],
-        },
-    }
+        sources["revision"] = {
+            "kind": "shell",
+            "spec": {
+                "command": (
+                    "set -eu\n"
+                    f"revisions=$(git ls-remote --exit-code {shlex.quote('https://github.com/' + repository + '.git')} "
+                    '"refs/tags/$UPDATE_REFERENCE" "refs/tags/$UPDATE_REFERENCE^{}")\n'
+                    'printf "%s\\n" "$revisions" | tail -n 1 | cut -f 1'
+                ),
+                "environments": [
+                    {"name": "UPDATE_REFERENCE", "value": '{{ source "version" }}'}
+                ],
+            },
+        }
+    else:
+        sources["revision"] = {
+            "kind": "gitcommit",
+            "spec": {
+                "branch": reference,
+                "url": f"https://github.com/{repository}.git",
+            },
+        }
     return {
         "name": f"Update Git Source: {name}",
         "pipelineid": f"update-git-{name}",
