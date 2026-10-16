@@ -76,23 +76,6 @@ jobs:
           df -h /
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
-      - name: Build Image For Verification
-        uses: docker/build-push-action@v7
-        with:
-          build-args: &source-arguments |
-            UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
-            UPSTREAM_REVISION=${{ matrix.recipe.revision }}
-          build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
-          cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
-          cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
-          context: ./${{ matrix.recipe.image }}
-          labels: &image-labels |
-            org.opencontainers.image.revision=${{ matrix.recipe.revision || github.sha }}
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
-          load: true
-          platforms: linux/${{ matrix.architecture }}
-          tags: images-${{ matrix.recipe.image }}:test
       - name: Log In to GHCR
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v4
@@ -100,30 +83,37 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
           username: ${{ github.actor }}
-      - id: publish
-        name: Publish Verified Image
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      - id: build
+        name: Build & Verify Image
         uses: docker/build-push-action@v7
         with:
-          build-args: *source-arguments
+          build-args: |
+            UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
+            UPSTREAM_REVISION=${{ matrix.recipe.revision }}
           build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
+          cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
+          cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
-          labels: *image-labels
+          labels: |
+            org.opencontainers.image.revision=${{ matrix.recipe.revision || github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
+          load: ${{ !(github.event_name != 'pull_request' && github.ref == 'refs/heads/main') }}
           platforms: linux/${{ matrix.architecture }}
-          provenance: mode=max
-          push: true
-          sbom: true
-          tags: ghcr.io/maxexcloo/${{ matrix.recipe.image }}:sha-${{ github.sha }}-${{ matrix.architecture }}
+          provenance: ${{ (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') && 'mode=max' || 'false' }}
+          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          sbom: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          tags: ${{ (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || format('images-{0}:test', matrix.recipe.image) }}
       - name: Record Digest
-        if: steps.publish.outcome == 'success'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           ARCHITECTURE: ${{ matrix.architecture }}
-          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           mkdir -p digests
           printf '%s\n' "$IMAGE_DIGEST" > "digests/$ARCHITECTURE"
       - name: Upload Digest
-        if: steps.publish.outcome == 'success'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v7
         with:
           name: digests-${{ matrix.recipe.image }}-${{ matrix.architecture }}
