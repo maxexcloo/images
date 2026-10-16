@@ -1,9 +1,5 @@
 **
-!patches/
-!patches/**
-!services/
-!services/**
 !Dockerfile
-!console.sh
 !health.sh
+!run-vm.sh
 !start.sh

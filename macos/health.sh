@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-[ ! -f /run/shm/qemu.end ]
-if [ -s /run/shm/qemu.pid ]; then
-    kill -0 "$(cat /run/shm/qemu.pid)"
-    [ -S /run/shm/macos-vnc.sock ]
+pidfile="$REIMS_CTL_DATA_DIR/vms/mac/qemu.pid"
+if [ -s "$pidfile" ]; then
+    kill -0 "$(cat "$pidfile")"
 fi
 scheme=https
 [ "${SELKIES_ENABLE_HTTPS:-true}" != false ] || scheme=http

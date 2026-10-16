@@ -12,7 +12,7 @@ ComfyUI ROCm and macOS support AMD64; other active recipes support AMD64 and ARM
 | BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench) | Non-root CLI; mount writable results at `/data`                                                          |
 | ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | AMD64 ROCm runtime; AI owns GPU allocation, models and persisted state                                   |
 | Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)               | Reusable binaries; Flylab adds generated monitoring configuration and startup                            |
-| macOS          | [dockur/macos](https://github.com/dockur/macos)         | AMD64 KVM VM with Reims graphics and Selkies HTTPS console on port 8080; persist `/storage`                |
+| macOS          | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu)         | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                |
 | Redlib          | [Nachtalb/redlib](https://github.com/Nachtalb/redlib)     | Non-root HTTP service on port 8080                                                                       |
 
 Each recipe owns a Dockerfile and `source.json` with the upstream repository,
