@@ -54,7 +54,7 @@ runuser -u ubuntu -- /etc/container-entrypoint.sh &
 selkies_pid=$!
 for attempt in {1..120}; do
     if [ -s "$XDG_RUNTIME_DIR/container-env" ] \
-        && runuser -u ubuntu -- pactl info >/dev/null 2>&1; then break; fi
+        && runuser -u ubuntu -- pw-cli info 0 >/dev/null 2>&1; then break; fi
     kill -0 "$selkies_pid" 2>/dev/null || fail 'Selkies exited during startup.'
     [ "$attempt" != 120 ] || fail 'Selkies did not become ready within 60 seconds.'
     sleep 0.5
