@@ -65,8 +65,9 @@ pinned upstream images; Flylab supplies startup and monitoring configuration.
 
 The [macOS recipe](macos/README.md) includes a Compose example for Linux and
 TrueNAS Docker Apps. It requires host KVM and GPU access, downloads macOS at
-runtime and keeps installation state outside the image. A private local viewer
-connects QEMU to Selkies; no host desktop or streaming service is required.
+runtime and keeps installation state outside the image. Reims' native window
+renders into Selkies' GPU-backed desktop; no host desktop or streaming service is
+required.
 
 ## Publishing
 

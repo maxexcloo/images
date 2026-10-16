@@ -45,9 +45,11 @@ Reims' host kernel and `vm.max_map_count` requirements still apply.
 macOS requires monotonic guest time. Kimbap's unstable host TSC causes an early
 `Non-monotonic time` panic with four vCPUs. Its verified Recovery configuration
 uses `CPU_CORES=1` and Compose `cpuset: "14,15"`, the sibling threads of one
-physical core on that host. This avoids host clock changes but limits CPU
-throughput; native GPU rendering and hardware streaming remain available. CPU
-numbers are host-specific, so select affinity from the target's CPU topology.
+physical core on that host. The affinity applies to the whole container, so the
+guest, graphics support and streaming share that core's CPU capacity. This avoids
+host clock changes but limits CPU throughput; native GPU rendering and hardware
+streaming remain available. CPU numbers are host-specific, so select affinity
+from the target's CPU topology.
 
 Linux-based TrueNAS Docker Apps can use the Compose example through
 **Apps → Install Via YAML**. Bind a writable dataset to `/storage`, mount the
@@ -87,7 +89,9 @@ docker exec -i CONTAINER bash < macos/verify-stream.sh
 docker cp CONTAINER:/tmp/macos-recovery.png /tmp/macos-recovery.png
 ```
 
-The script checks the live QEMU PID, HTTPS authentication and an H.264 frame, and
-saves a screenshot for inspection. Then use the browser to verify Recovery's
-utilities and input. These checks do not establish installed macOS Metal
+The script checks the live QEMU PID, authentication on the configured backend
+scheme and port, and an H.264 frame, then saves a screenshot for inspection. With
+a reverse proxy, also verify HTTPS and streaming through its external URL. Then
+use the browser to verify Recovery's utilities and input. These checks do not
+establish installed macOS Metal
 correctness or streaming performance.
