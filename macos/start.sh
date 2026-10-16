@@ -60,7 +60,7 @@ for attempt in {1..120}; do
     sleep 0.5
 done
 
-runuser -u ubuntu -- /usr/local/lib/macos/run-vm.sh &
+setpriv --init-groups --regid=ubuntu --reuid=ubuntu /usr/local/lib/macos/run-vm.sh &
 vm_pid=$!
 set +e
 wait -n "$vm_pid" "$selkies_pid"
