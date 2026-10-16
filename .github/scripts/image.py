@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Build active image recipes using pinned upstream contexts."""
 
 import argparse
@@ -20,13 +19,12 @@ def source(name):
     data = json.loads((ROOT / name / "source.json").read_text())
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", data["repository"]):
         raise ValueError(f"Invalid upstream repository for {name}")
-    if "reference" in data or "revision" in data:
-        if (
-            not isinstance(data.get("reference"), str)
-            or not data["reference"]
-            or not re.fullmatch(r"[0-9a-f]{40}", data.get("revision", ""))
-        ):
-            raise ValueError(f"Invalid pinned source for {name}")
+    if ("reference" in data or "revision" in data) and (
+        not isinstance(data.get("reference"), str)
+        or not data["reference"]
+        or not re.fullmatch(r"[0-9a-f]{40}", data.get("revision", ""))
+    ):
+        raise ValueError(f"Invalid pinned source for {name}")
     architectures = data.setdefault("architectures", ["amd64", "arm64"])
     if (
         not isinstance(architectures, list)
@@ -81,9 +79,14 @@ def changes_since(revision):
     if not revision or revision == "0" * 40:
         return None
     # A delayed run must not overwrite a newer successful publication.
-    if subprocess.run(
-        ["git", "merge-base", "--is-ancestor", "HEAD", revision], cwd=ROOT
-    ).returncode == 0:
+    if (
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", "HEAD", revision],
+            check=False,
+            cwd=ROOT,
+        ).returncode
+        == 0
+    ):
         return []
     return subprocess.check_output(
         ["git", "diff", "--name-only", "--no-renames", revision, "HEAD"],
@@ -109,26 +112,38 @@ def main():
         parser.error("--tag requires a single image")
     platform = args.platform
     if platform is None:
-        platform = subprocess.check_output([
-            "docker", "info", "--format", "{{.OSType}}/{{.Architecture}}",
-        ], text=True).strip()
+        platform = subprocess.check_output(
+            [
+                "docker",
+                "info",
+                "--format",
+                "{{.OSType}}/{{.Architecture}}",
+            ],
+            text=True,
+        ).strip()
         platform = platform.replace("/aarch64", "/arm64").replace("/x86_64", "/amd64")
     for name in selected:
         data = source(name)
         if platform and platform.split("/")[1] not in data["architectures"]:
             if args.image == "all" and not args.platform:
-                print(f"Skipping {name}: {platform} is outside its configured architectures.")
+                print(
+                    f"Skipping {name}: {platform} is outside its configured architectures."
+                )
                 continue
             raise ValueError(f"{name} does not support {platform}")
         tag = args.tag or f"images-{name}:test"
         command = ["docker", "buildx", "build"]
         if "revision" in data:
-            command.extend([
-                "--build-arg", f"UPSTREAM_REFERENCE={data['reference']}",
-                "--build-arg", f"UPSTREAM_REVISION={data['revision']}",
-                "--build-context",
-                f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
-            ])
+            command.extend(
+                [
+                    "--build-arg",
+                    f"UPSTREAM_REFERENCE={data['reference']}",
+                    "--build-arg",
+                    f"UPSTREAM_REVISION={data['revision']}",
+                    "--build-context",
+                    f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
+                ]
+            )
         command.append("--load")
         if args.platform:
             command.extend(["--platform", args.platform])
