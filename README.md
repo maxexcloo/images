@@ -96,4 +96,4 @@ Gatus/Tailscale follows its Docker image pins only. macOS builds the pinned Reim
 revision with its upstream installer; that revision owns its QEMU, firmware and
 helper dependencies. Set `GITHUB_TOKEN` for authenticated GitHub lookups.
 
-Update groups follow their ecosystems: `actions`, `docker`, `git`, `mise` and `python`.
+Update groups follow their ecosystems: `actions`, `docker`, `git` and `python`.

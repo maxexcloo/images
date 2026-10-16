@@ -35,7 +35,7 @@ jobs:
       - name: Set Up Shared Tools & Tasks
         uses: maxexcloo/dotfiles/.github/actions/mise@main
         with:
-          tools: actionlint python updatecli yq
+          tools: actionlint python ruff updatecli yq
       - name: Run Checks
         run: mise run check
       - id: recipes

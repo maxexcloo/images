@@ -16,7 +16,12 @@ from image import changes_since, matrix
 class MatrixTests(unittest.TestCase):
     def test_metadata_only_changes_need_no_images(self):
         result = matrix(
-            changed_files=["README.md", ".mise.toml", ".updatecli.d/mise.yaml", ".github/scripts/updates.py"]
+            changed_files=[
+                "README.md",
+                ".mise.toml",
+                ".updatecli.d/mise.yaml",
+                ".github/scripts/updates.py",
+            ]
         )
         self.assertFalse(result["required"])
         self.assertEqual(result["build"], [])
@@ -27,7 +32,8 @@ class MatrixTests(unittest.TestCase):
             with self.subTest(path=path):
                 result = matrix(changed_files=[path])
                 self.assertEqual(
-                    [recipe["image"] for recipe in result["include"]], ["gatus-tailscale"]
+                    [recipe["image"] for recipe in result["include"]],
+                    ["gatus-tailscale"],
                 )
                 self.assertEqual(
                     {build["architecture"] for build in result["build"]},
@@ -57,7 +63,8 @@ class MatrixTests(unittest.TestCase):
         self.assertNotIn("revision", recipe)
         self.assertNotIn("reference", recipe)
         git_updates = {
-            manifest["pipelineid"] for manifest in updates.manifests()
+            manifest["pipelineid"]
+            for manifest in updates.manifests()
             if manifest["labels"]["group"] == "git"
         }
         self.assertNotIn("update-git-gatus-tailscale", git_updates)
@@ -126,7 +133,9 @@ class PublicationBaselineTests(unittest.TestCase):
         (self.root / "README.md").write_text("Later metadata")
         self.commit()
         result = matrix(changed_files=changes_since(self.base))
-        self.assertEqual([recipe["image"] for recipe in result["include"]], ["gatus-tailscale"])
+        self.assertEqual(
+            [recipe["image"] for recipe in result["include"]], ["gatus-tailscale"]
+        )
 
     def test_delayed_old_run_cannot_overwrite_newer_publication(self):
         (self.root / "gatus-tailscale" / "Dockerfile").write_text("Newer runtime")
