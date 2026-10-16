@@ -42,6 +42,13 @@ need `/dev/udmabuf` for guest-memory import. The launcher grants the container u
 its mapped device groups. It does not change host drivers, modules or sysctls.
 Reims' host kernel and `vm.max_map_count` requirements still apply.
 
+macOS requires monotonic guest time. Kimbap's unstable host TSC causes an early
+`Non-monotonic time` panic with four vCPUs. Its verified Recovery configuration
+uses `CPU_CORES=1` and Compose `cpuset: "14,15"`, the sibling threads of one
+physical core on that host. This avoids host clock changes but limits CPU
+throughput; native GPU rendering and hardware streaming remain available. CPU
+numbers are host-specific, so select affinity from the target's CPU topology.
+
 Linux-based TrueNAS Docker Apps can use the Compose example through
 **Apps → Install Via YAML**. Bind a writable dataset to `/storage`, mount the
 browser password as a secret, and bind port 8080 to the NAS's private address.
