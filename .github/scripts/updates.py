@@ -2,8 +2,10 @@
 """Discover recipe Updatecli manifests."""
 
 import argparse
+import json
 import re
 import shlex
+import subprocess
 from pathlib import Path
 
 from image import ROOT, images, source
@@ -77,33 +79,18 @@ def manifests():
             }
 
 
-def yaml_lines(value, indent=0):
-    """Emit the mappings, lists and strings used by generated manifests."""
-    prefix = ' ' * indent
-    if isinstance(value, dict):
-        for key in sorted(value, key=lambda key: (isinstance(value[key], (dict, list)), key)):
-            item = value[key]
-            if isinstance(item, (dict, list)):
-                yield f'{prefix}{key}:'
-                yield from yaml_lines(item, indent + 2)
-            elif '\n' in item:
-                yield f'{prefix}{key}: |-'
-                yield from (' ' * (indent + 2) + line for line in item.splitlines())
-            else:
-                yield f"{prefix}{key}: '" + item.replace("'", "''") + "'"
-    else:
-        for item in value:
-            yield prefix + '-'
-            yield from yaml_lines(item, indent + 2)
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path)
     args = parser.parse_args()
     args.directory.mkdir(exist_ok=True, parents=True)
     for index, manifest in enumerate(manifests()):
-        (args.directory / f'{index:03}.yaml').write_text('\n'.join(yaml_lines(manifest)) + '\n')
+        content = subprocess.check_output(
+            ['yq', '--input-format=json', '--prettyPrint', '.'],
+            input=json.dumps(manifest),
+            text=True,
+        )
+        (args.directory / f'{index:03}.yaml').write_text(content)
 
 
 if __name__ == '__main__':
