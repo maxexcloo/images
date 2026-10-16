@@ -3,7 +3,7 @@
 ## Build Ownership
 
 - Active recipes have a `source.json`.
-- Pin upstream source revisions. Keep application source in its upstream repository.
+- Pin upstream images by digest. Recipes that fetch source also pin its revision; image-only recipes follow Docker updates without an independent Git pin. Keep application source in its upstream repository.
 - Prefer suitable upstream container images over custom builds. Keep local recipes and changes to the minimum needed for working deployments.
 - Use upstream dependencies when the image works. Add local patches or dependency overrides only to fix demonstrated functional issues, not solely to address vulnerability scan findings.
 - Build each recipe’s configured architectures on native runners; the default is AMD64 and ARM64. ComfyUI ROCm is AMD64 only. Run build-time tests where provided.
@@ -17,4 +17,4 @@ Keep build behaviour and architecture documented concisely in `README.md`.
 
 ## Verification
 
-Run `mise run fmt` before committing and `mise run check` after recipe, configuration or workflow changes. Remote CI verifies both architectures and publishing; local checks verify supported recipes on the host architecture only. Verify ComfyUI ROCm on Bento; ARM64 local checks explicitly skip it.
+Run `mise run fmt` before committing and `mise run check` after recipe, configuration or workflow changes. Local checks validate configuration and build selection without building images. Run `mise run build` after recipe changes to verify supported recipes on the host architecture. Remote CI verifies both architectures and publishing. Verify ComfyUI ROCm on Bento; ARM64 local builds explicitly skip it.

@@ -1,8 +1,7 @@
-[tools]
-# gh = "latest"
-# python = "latest"
-# updatecli = "latest"
-actionlint = "1.7.12"
+[vars]
+actionlint_args = '-shellcheck=""'
+python_test_directory = ".github/scripts"
+updatecli_discovery = "python -B .github/scripts/updates.py"
 
 # Development
 [tasks.build]
@@ -10,23 +9,7 @@ description = "Build Active Images For The Local Architecture"
 run = "python .github/scripts/image.py build"
 
 [tasks.check]
-description = "Validate Configuration & Build Active Images"
-depends = ["validate"]
-run = "python .github/scripts/image.py build"
+depends = ["check:actions", "check:mise", "check:updates", "test:python"]
 
 [tasks.fmt]
-description = "Format The Mise Configuration"
-run = "mise fmt"
-
-[tasks.updates]
-description = "Review Discovered Dependency Updates"
-run = "python -B .github/scripts/updates.py {{arg(name='action', default='diff')}}"
-
-[tasks.validate]
-description = "Validate Repository Configuration"
-run = """
-python -B .github/scripts/updates.py validate
-mise fmt --check
-python -B -m unittest discover --pattern 'test_*.py' --start-directory .github/scripts
-actionlint -shellcheck="" .github/workflows/container.yaml
-"""
+depends = ["fmt:mise"]
