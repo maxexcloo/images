@@ -3,7 +3,7 @@
 AMD64 macOS VM with upstream Reims graphics, a native Vulkan-backed window and
 Selkies browser streaming. QEMU renders directly into Selkies' GPU-backed desktop;
 there is no VNC server or separate viewer. USB audio uses QEMU's native PipeWire
-backend. The image follows the Reims revision used by Bluemax.
+backend.
 
 ## Run
 
