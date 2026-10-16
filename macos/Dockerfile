@@ -32,11 +32,13 @@ cp /src/reims/vendor/qemu/COPYING.LIB /out/usr/share/licenses/reims/QEMU-COPYING
 /out/usr/lib/reims/bin/reims-ctl --version
 /out/usr/lib/reims/bin/reims-util --version
 /out/usr/lib/reims/qemu/bin/qemu-system-x86_64 -device help | grep -F apple-gfx-pci
-# Resolve runtime library packages against the same distribution as the final image.
-ldd /out/usr/lib/reims/bin/reims-* /out/usr/lib/reims/qemu/bin/qemu-* \
-    | awk '/=> \// { print $3 }' | sort -u \
-    | xargs dpkg-query --search | cut -d: -f1 | sort -u > /out/runtime-packages
+rm -rf /src/reims "$HOME/.cache/reims-ctl" "$HOME/.cargo" "$HOME/.rustup" \
+    "$HOME/.local/share/reims-ctl" "$HOME/.config/reims-ctl"
 BUILD
+# Resolve canonical paths: this distribution records merged-/usr library paths.
+RUN ldd /out/usr/lib/reims/bin/reims-* /out/usr/lib/reims/qemu/bin/qemu-* \
+    | awk '/=> \// { print $3 }' | xargs realpath | sort -u \
+    | xargs dpkg-query --search | cut -d: -f1 | sort -u > /out/runtime-packages
 
 FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie@sha256:4926b252eabd23dce9b9d52eedcc17588fff4b2c28c3930766516467028b06e7
 USER 0
