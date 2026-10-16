@@ -15,7 +15,8 @@ import urllib.request
 import aiohttp
 
 context = ssl._create_unverified_context()
-url = 'https://127.0.0.1:8080/'
+scheme = 'http' if os.environ.get('SELKIES_ENABLE_HTTPS') == 'false' else 'https'
+url = f"{scheme}://127.0.0.1:{os.environ.get('SELKIES_PORT', '8080')}/"
 try:
     urllib.request.urlopen(url, context=context)
 except urllib.error.HTTPError as error:
@@ -30,7 +31,7 @@ headers = {'Authorization': 'Basic ' + token}
 with urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=context) as response:
     assert response.status == 200
     assert b'<html' in response.read().lower()
-print('HTTPS browser authentication: passed')
+print(f'{scheme.upper()} browser authentication: passed')
 
 async def check_stream():
     async with aiohttp.ClientSession(headers=headers) as session:
