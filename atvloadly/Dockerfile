@@ -1,12 +1,11 @@
-ARG UPSTREAM_REFERENCE
-FROM golang:1.26.9-bookworm AS source
+FROM golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c AS source
 ARG UPSTREAM_REFERENCE
 WORKDIR /source
 COPY --from=upstream / /source
 COPY patches/ /tmp/patches/
 RUN git apply /tmp/patches/*.patch
 
-FROM node:24.15.0-bookworm-slim AS frontend
+FROM node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d AS frontend
 WORKDIR /source/web/static
 COPY --from=source /source /source
 RUN --mount=type=cache,target=/root/.npm npm ci && npm test && npm run build
@@ -18,7 +17,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
     go test ./internal/manager ./internal/service \
     && go build -ldflags="-extldflags=-static -linkmode=external -X github.com/bitxeno/atvloadly/internal/app/build.Version=${UPSTREAM_REFERENCE} -X github.com/bitxeno/atvloadly/internal/app/build.Mode=production" -o /atvloadly -tags netgo,osusergo .
 
-FROM bitxeno/atvloadly:${UPSTREAM_REFERENCE}
+FROM bitxeno/atvloadly:v0.6.2@sha256:777373b81714f79a7047ff6cd1a849ae7043566d689db699c4088bf62e7648e6
 ENV SERVICE_PORT=5533
 LABEL org.opencontainers.image.source="https://github.com/maxexcloo/images"
 # The upstream image leaves /tmp unwritable by apt's unprivileged helper.

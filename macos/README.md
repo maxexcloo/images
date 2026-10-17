@@ -34,6 +34,11 @@ progress appears in the container log; guest and graphics logs live under
 `/storage/reims/vms/mac/logs`. Do not print whole QEMU command logs when sharing
 credentials or machine identity could be included.
 
+Container health requires a live QEMU process and Selkies' health endpoint.
+Initial Recovery downloads can exceed the health check's startup grace period;
+the container becomes healthy after the VM starts. Display readiness has a bounded
+wait and fails startup if X remains unavailable.
+
 ## Host & TrueNAS
 
 Use AMD64 Linux with working KVM, AVX2, a supported Vulkan GPU and enough memory
