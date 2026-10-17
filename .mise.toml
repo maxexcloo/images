@@ -5,7 +5,7 @@ updatecli_discovery = "python -B .github/scripts/updates.py"
 
 [tools]
 # The published shared configuration does not yet declare Oxfmt.
-oxfmt = "latest"
+oxfmt = "0.73.0"
 
 # Development
 [tasks.build]
