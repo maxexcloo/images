@@ -6,13 +6,13 @@ ComfyUI ROCm and macOS support AMD64; other active recipes support AMD64 and ARM
 
 ## Images
 
-| Image           | Upstream                                                  | Runtime                                                                                                  |
-| --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly) | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
-| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench) | Non-root CLI; mount writable results at `/data`                                                          |
-| ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | AMD64 ROCm runtime; AI owns GPU allocation, models and persisted state                                   |
-| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)               | Reusable binaries; Flylab adds generated monitoring configuration and startup                            |
-| macOS          | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu)         | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                |
+| Image           | Upstream                                                          | Runtime                                                                                                  |
+| --------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
+| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                          |
+| ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; AI owns GPU allocation, models and persisted state                                   |
+| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; Flylab adds generated monitoring configuration and startup                            |
+| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`     |
 
 Each recipe owns a Dockerfile and `source.json` with the upstream repository.
 Recipes that fetch source also specify its reference and pinned commit.
@@ -49,7 +49,8 @@ mise exec -- python .github/scripts/image.py build atvloadly
 
 Atvloadly includes pairing completion and discovery refresh patches. Application
 dependencies follow upstream; local patches and overrides address demonstrated
-functional issues. Upstream browser and Go tests run during its build. Deployment
+functional issues. Its runtime base follows Docker updates independently of the
+compiled application source. Upstream browser and Go tests run during its build. Deployment
 requires host networking and
 `seccomp=unconfined` for the upstream signing tools.
 
@@ -74,6 +75,10 @@ required.
 Pull requests build changed recipes on their configured architectures without publishing.
 Shared pipeline changes rebuild all recipes; metadata-only changes validate configuration
 and skip image builds. Required checks always report.
+Publishing runs on the same branch are serialised. Outdated manual runs on `main`
+skip builds; manual runs of its current revision can rebuild selected images.
+Outdated push runs fail before building so they cannot advance the successful
+publication baseline.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Tags include `latest`, `sha-<build-commit>` and

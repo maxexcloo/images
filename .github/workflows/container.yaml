@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-  group: container-${{ github.ref }}-${{ inputs.image || 'all' }}
+  group: container-${{ github.ref }}
 
 jobs:
   prepare:
@@ -26,6 +26,7 @@ jobs:
     outputs:
       build-required: ${{ fromJSON(steps.recipes.outputs.matrix).required }}
       matrix: ${{ steps.recipes.outputs.matrix }}
+      publish-enabled: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -35,7 +36,7 @@ jobs:
       - name: Set Up Shared Tools & Tasks
         uses: maxexcloo/dotfiles/.github/actions/mise@main
         with:
-          tools: actionlint python ruff updatecli yq
+          tools: actionlint oxfmt python ruff shellcheck updatecli yq
       - name: Run Checks
         run: mise run check
       - id: recipes
@@ -45,6 +46,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           IMAGE_NAME: ${{ inputs.image || 'all' }}
         run: |
+          if [ "$GITHUB_REF" = refs/heads/main ]; then
+            current_revision=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+            if [ "$GITHUB_SHA" != "$current_revision" ]; then
+              # A skipped push must not become the successful publication baseline.
+              if [ "$GITHUB_EVENT_NAME" = push ]; then
+                echo '::error::Refusing an outdated push run; main has advanced.'
+                exit 1
+              fi
+              echo '::notice::Skipping an outdated manual run; main has advanced.'
+              BASE_REVISION=$GITHUB_SHA
+            fi
+          fi
           # Pending main runs can be replaced; include every change not yet verified and published.
           if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF_TYPE" != tag ]; then
             BASE_REVISION=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/container.yaml/runs?branch=$GITHUB_REF_NAME&event=push&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""' || true)
@@ -77,7 +90,7 @@ jobs:
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Log In to GHCR
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: needs.prepare.outputs.publish-enabled == 'true'
         uses: docker/login-action@v4
         with:
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -98,14 +111,14 @@ jobs:
             org.opencontainers.image.revision=${{ matrix.recipe.revision || github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
-          load: ${{ !(github.event_name != 'pull_request' && github.ref == 'refs/heads/main') }}
+          load: ${{ needs.prepare.outputs.publish-enabled != 'true' }}
           platforms: linux/${{ matrix.architecture }}
-          provenance: ${{ (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') && 'mode=max' || 'false' }}
-          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-          sbom: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-          tags: ${{ (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || format('images-{0}:test', matrix.recipe.image) }}
+          provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
+          push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
+          sbom: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
+          tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || format('images-{0}:test', matrix.recipe.image) }}
       - name: Record Digest
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: needs.prepare.outputs.publish-enabled == 'true'
         env:
           ARCHITECTURE: ${{ matrix.architecture }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
@@ -113,7 +126,7 @@ jobs:
           mkdir -p digests
           printf '%s\n' "$IMAGE_DIGEST" > "digests/$ARCHITECTURE"
       - name: Upload Digest
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: needs.prepare.outputs.publish-enabled == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: digests-${{ matrix.recipe.image }}-${{ matrix.architecture }}
@@ -122,7 +135,7 @@ jobs:
 
   publish:
     name: Publish ${{ matrix.recipe.image }}
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.prepare.outputs.build-required == 'true'
+    if: needs.prepare.outputs.publish-enabled == 'true' && needs.prepare.outputs.build-required == 'true'
     needs: [prepare, build]
     runs-on: ubuntu-latest
     permissions:
@@ -179,5 +192,5 @@ jobs:
             ${{ needs.prepare.result == 'success' &&
                 (needs.prepare.outputs.build-required == 'true' || needs.prepare.outputs.build-required == 'false') &&
                 needs.build.result == (needs.prepare.outputs.build-required == 'true' && 'success' || 'skipped') &&
-                needs.publish.result == (needs.prepare.outputs.build-required == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && 'success' || 'skipped') }}
+                needs.publish.result == (needs.prepare.outputs.build-required == 'true' && needs.prepare.outputs.publish-enabled == 'true' && 'success' || 'skipped') }}
         run: test "$SUCCESS" = true

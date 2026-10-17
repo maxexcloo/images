@@ -1,6 +1,6 @@
 [vars]
-actionlint_args = '-shellcheck=""'
 python_test_directory = ".github/scripts"
+shell_paths = "atvloadly/*.sh macos/*.sh"
 updatecli_discovery = "python -B .github/scripts/updates.py"
 
 # Development
@@ -12,10 +12,12 @@ run = "python .github/scripts/image.py build"
 depends = [
   "check:actions",
   "check:mise",
+  "check:oxfmt",
   "check:python",
+  "check:shell",
   "check:updates",
   "test:python",
 ]
 
 [tasks.fmt]
-depends = ["fmt:mise", "fmt:python"]
+depends = ["fmt:mise", "fmt:oxfmt", "fmt:python"]

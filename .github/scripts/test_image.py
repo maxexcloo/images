@@ -1,4 +1,4 @@
-"""Exercise recipe selection and the required build/publishing gate."""
+"""Exercise recipe selection and publication baselines."""
 
 import json
 import shutil

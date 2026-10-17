@@ -20,7 +20,11 @@ trap 'stop; exit 0' TERM INT
 trap stop EXIT
 
 if [ "${SELKIES_WAYLAND:-false}" != true ]; then
-    until xdpyinfo >/dev/null 2>&1; do sleep 0.5; done
+    for attempt in {1..120}; do
+        if timeout 2 xdpyinfo >/dev/null 2>&1; then break; fi
+        [ "$attempt" != 120 ] || { printf 'macOS: X display did not become ready.\n' >&2; exit 1; }
+        sleep 0.5
+    done
     openbox --sm-disable &
     manager=$!
 fi
