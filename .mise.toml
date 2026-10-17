@@ -3,6 +3,10 @@ python_test_directory = ".github/scripts"
 shell_paths = "atvloadly/*.sh macos/*.sh"
 updatecli_discovery = "python -B .github/scripts/updates.py"
 
+[tools]
+# The published shared configuration does not yet declare Oxfmt.
+oxfmt = "latest"
+
 # Development
 [tasks.build]
 description = "Build Active Images For The Local Architecture"
@@ -19,5 +23,12 @@ depends = [
   "test:python",
 ]
 
+# The published shared configuration does not yet provide Oxfmt tasks.
+[tasks."check:oxfmt"]
+run = "oxfmt --check --no-error-on-unmatched-pattern ."
+
 [tasks.fmt]
 depends = ["fmt:mise", "fmt:oxfmt", "fmt:python"]
+
+[tasks."fmt:oxfmt"]
+run = "oxfmt --write --no-error-on-unmatched-pattern ."
