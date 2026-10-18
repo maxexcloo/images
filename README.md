@@ -82,8 +82,9 @@ publication baseline.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Tags include `latest`, `sha-<build-commit>` and
-`source-<upstream-commit>` for recipes that fetch source. Image-only recipes use the
-packaging commit for revision metadata. Published images include provenance and SBOMs.
+`source-<upstream-commit>` for recipes that fetch source. Revision labels record the
+packaging commit; recipes that fetch source record their upstream reference as the
+image version. Published images include provenance and SBOMs.
 Pin deployed images by digest. Local builds cover the host architecture; CI
 verifies every configured architecture on native runners and handles publishing.
 

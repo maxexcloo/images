@@ -19,7 +19,6 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 
 FROM bitxeno/atvloadly:v0.6.2@sha256:777373b81714f79a7047ff6cd1a849ae7043566d689db699c4088bf62e7648e6
 ENV SERVICE_PORT=5533
-LABEL org.opencontainers.image.source="https://github.com/maxexcloo/images"
 # The upstream image leaves /tmp unwritable by apt's unprivileged helper.
 RUN chmod 1777 /tmp \
     && sed -i 's|http://|https://|g' /etc/apt/sources.list \

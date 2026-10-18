@@ -108,9 +108,10 @@ jobs:
           cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
           labels: |
-            org.opencontainers.image.revision=${{ matrix.recipe.revision || github.sha }}
+            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
+            ${{ matrix.recipe.reference && format('org.opencontainers.image.version={0}', matrix.recipe.reference) || '' }}
           load: ${{ needs.prepare.outputs.publish-enabled != 'true' }}
           platforms: linux/${{ matrix.architecture }}
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
