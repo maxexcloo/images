@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie@sha256:4926b252eabd23dce9b9d52eedcc17588fff4b2c28c3930766516467028b06e7 AS build
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
