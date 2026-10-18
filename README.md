@@ -49,8 +49,8 @@ mise exec -- python .github/scripts/image.py build atvloadly
 
 Atvloadly includes pairing completion and discovery refresh patches. Application
 dependencies follow upstream; local patches and overrides address demonstrated
-functional issues. Its runtime base follows Docker updates independently of the
-compiled application source. Upstream browser and Go tests run during its build. Deployment
+functional issues. Its upstream runtime image tag must match the compiled source
+reference; checks fail when only one moves. Upstream browser and Go tests run during its build. Deployment
 requires host networking and
 `seccomp=unconfined` for the upstream signing tools.
 

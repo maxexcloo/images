@@ -1,6 +1,7 @@
 """Exercise recipe selection and publication baselines."""
 
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -82,6 +83,16 @@ class MatrixTests(unittest.TestCase):
                     (root / "example" / "source.json").write_text(json.dumps(data))
                     with self.assertRaises(ValueError):
                         image.source("example")
+
+    def test_upstream_runtime_base_matches_source_reference(self):
+        # Updatecli moves Docker and Git pins separately; keep them paired.
+        for name in image.images():
+            data = image.source(name)
+            dockerfile = (image.ROOT / name / "Dockerfile").read_text()
+            pattern = rf"^FROM {re.escape(data['repository'].lower())}:([^@\s]+)"
+            for tag in re.findall(pattern, dockerfile, re.MULTILINE):
+                with self.subTest(name=name):
+                    self.assertEqual(tag, data.get("reference"))
 
     def test_unknown_manual_recipe_fails(self):
         with self.assertRaises(ValueError):
