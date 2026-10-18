@@ -59,7 +59,7 @@ jobs:
             fi
           fi
           # Pending main runs can be replaced; include every change not yet verified and published.
-          if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF_TYPE" != tag ]; then
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
             BASE_REVISION=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/container.yaml/runs?branch=$GITHUB_REF_NAME&event=push&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""' || true)
           fi
           matrix=$(python3 .github/scripts/image.py matrix "$IMAGE_NAME" --changed-from "$BASE_REVISION")
