@@ -160,6 +160,7 @@ jobs:
           BUILD_REVISION: ${{ github.sha }}
           IMAGE_NAME: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
           UPSTREAM_REVISION: ${{ matrix.recipe.revision }}
+          UPSTREAM_VERSION: ${{ matrix.recipe.version }}
         run: |
           set --
           for architecture in $ARCHITECTURES; do
@@ -168,6 +169,9 @@ jobs:
           done
           if [ -n "$UPSTREAM_REVISION" ]; then
             set -- --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" "$@"
+          fi
+          if [ -n "$UPSTREAM_VERSION" ]; then
+            set -- --tag "$IMAGE_NAME:$UPSTREAM_VERSION" "$@"
           fi
           docker buildx imagetools create \
             --tag "$IMAGE_NAME:latest" \

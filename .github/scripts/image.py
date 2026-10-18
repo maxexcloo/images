@@ -70,6 +70,9 @@ def affected_images(names, changed_files):
 def matrix(image="all", changed_files=None):
     # Validate every recipe even when only metadata changed.
     catalogue = {name: dict(image=name, **source(name)) for name in images()}
+    for recipe in catalogue.values():
+        reference = recipe.get("reference", "")
+        recipe["version"] = reference if RELEASE.fullmatch(reference) else ""
     if image != "all" and image not in catalogue:
         raise ValueError(f"Unknown image: {image}")
     selected = set(catalogue) if image == "all" else {image}
