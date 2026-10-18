@@ -3,7 +3,7 @@
 ## Build Ownership
 
 - Active recipes have a `source.json`, which owns architecture overrides.
-- Pin upstream images by digest and fetched source by revision. Keep application source in its upstream repository.
+- Pin fetched source by revision. Keep application source in its upstream repository.
 - Prefer suitable upstream container images over custom builds. Keep local recipes and changes to the minimum needed for working deployments.
 - Use upstream dependencies when the image works. Add local patches or dependency overrides only to fix demonstrated functional issues, not solely to address vulnerability scan findings.
 - Run build-time tests where provided.
