@@ -38,19 +38,24 @@ def source(name):
 
 def affected_images(names, changed_files):
     selected = set()
-    metadata = {
+    # Changes outside image build contexts validate configuration without rebuilding.
+    metadata_names = {".gitignore", "AGENTS.md", "LICENSE", "README.md", "compose.yaml"}
+    metadata_paths = {
         ".github/scripts/updates.py",
-        ".gitignore",
         ".mise.toml",
-        "AGENTS.md",
-        "LICENSE",
-        "README.md",
+        "macos/verify-stream.sh",
     }
     for path in changed_files:
         name = path.split("/", 1)[0]
+        if (
+            path in metadata_paths
+            or Path(path).name in metadata_names
+            or path.startswith((".github/scripts/test_", ".updatecli.d/"))
+        ):
+            continue
         if name in names:
             selected.add(name)
-        elif path not in metadata and not path.startswith((".updatecli.d/", "docs/")):
+        else:
             return set(names)
     return selected
 
