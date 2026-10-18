@@ -1,11 +1,6 @@
 [vars]
 python_test_directory = ".github/scripts"
 shell_paths = "atvloadly/*.sh macos/*.sh"
-updatecli_discovery = "python -B .github/scripts/updates.py"
-
-[tools]
-# The published shared configuration does not yet declare Oxfmt.
-oxfmt = "0.73.0"
 
 # Development
 [tasks.build]
@@ -23,12 +18,51 @@ depends = [
   "test:python",
 ]
 
-# The published shared configuration does not yet provide Oxfmt tasks.
-[tasks."check:oxfmt"]
-run = "oxfmt --check --no-error-on-unmatched-pattern ."
+[tasks."check:updates"]
+description = "Validate Updatecli Policies & Discovered Pins"
+env.GITHUB_TOKEN = "validation-placeholder"
+run = '''
+set -eu
+directory=$(mktemp -d)
+trap 'rm -rf -- "$directory"' EXIT
+python -B .github/scripts/updates.py "$directory"
+updatecli manifest validate --config .updatecli.d --config "$directory" --strict --unique-tmp-dir
+'''
 
 [tasks.fmt]
 depends = ["fmt:mise", "fmt:oxfmt", "fmt:python"]
 
-[tasks."fmt:oxfmt"]
-run = "oxfmt --write --no-error-on-unmatched-pattern ."
+# Dependencies
+[tasks."dependencies:check"]
+description = "Preview Dependency Updates"
+usage = 'flag "--labels <labels>" help="Select Updatecli Groups"'
+run = '''
+set -eu
+GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-$(gh auth token)}}"
+export GITHUB_TOKEN
+directory=$(mktemp -d)
+trap 'rm -rf -- "$directory"' EXIT
+python -B .github/scripts/updates.py "$directory"
+set --
+if [ -n "${usage_labels:-}" ]; then
+  set -- --labels "$usage_labels"
+fi
+updatecli pipeline diff --config .updatecli.d --config "$directory" --disable-changelog --disable-udash-report --unique-tmp-dir "$@"
+'''
+
+[tasks."dependencies:update"]
+description = "Apply Reviewed Dependency Updates"
+usage = 'flag "--labels <labels>" help="Select Updatecli Groups"'
+run = '''
+set -eu
+GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-$(gh auth token)}}"
+export GITHUB_TOKEN
+directory=$(mktemp -d)
+trap 'rm -rf -- "$directory"' EXIT
+python -B .github/scripts/updates.py "$directory"
+set --
+if [ -n "${usage_labels:-}" ]; then
+  set -- --labels "$usage_labels"
+fi
+updatecli pipeline apply --config .updatecli.d --config "$directory" --disable-changelog --disable-udash-report --unique-tmp-dir "$@"
+'''
