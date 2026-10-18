@@ -10,8 +10,8 @@ ComfyUI ROCm and macOS support AMD64; other active recipes support AMD64 and ARM
 | --------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
 | BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                          |
-| ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; AI owns GPU allocation, models and persisted state                                   |
-| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; Flylab adds generated monitoring configuration and startup                            |
+| ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; deployments own GPU allocation, models and persisted state                           |
+| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                  |
 | macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`     |
 
 Each recipe owns a Dockerfile and `source.json` with the upstream repository.
@@ -49,8 +49,8 @@ mise exec -- python .github/scripts/image.py build atvloadly
 
 Atvloadly includes pairing completion and discovery refresh patches. Application
 dependencies follow upstream; local patches and overrides address demonstrated
-functional issues. Its runtime base follows Docker updates independently of the
-compiled application source. Upstream browser and Go tests run during its build. Deployment
+functional issues. Its upstream runtime image tag must match the compiled source
+reference; checks fail when only one moves. Upstream browser and Go tests run during its build. Deployment
 requires host networking and
 `seccomp=unconfined` for the upstream signing tools.
 
@@ -59,10 +59,10 @@ upstream application and runs upstream tests; dependency versions can change
 between builds of the same source.
 
 ComfyUI uses the pinned upstream ROCm base and its Python installation.
-Verify ComfyUI GPU compatibility on Bento before changing its image pin; its saved
-core, models and separate Normal/NSFW state remain owned by AI.
-Gatus/Tailscale combines binaries from
-pinned upstream images; Flylab supplies startup and monitoring configuration.
+Verify ComfyUI GPU compatibility on the target ROCm host before changing its image
+pin; its saved core, models and state remain owned by the deployment.
+Gatus/Tailscale combines binaries from pinned upstream images; deployments supply
+startup and monitoring configuration.
 
 The [macOS recipe](macos/README.md) includes a Compose example for Linux and
 TrueNAS Docker Apps. It requires host KVM and GPU access, downloads macOS at
@@ -82,23 +82,20 @@ publication baseline.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Tags include `latest`, `sha-<build-commit>` and
-`source-<upstream-commit>` for recipes that fetch source. Image-only recipes use the
-packaging commit for revision metadata. Published images include provenance and SBOMs.
-Pin deployed images by digest. Local builds cover the host architecture; CI
-verifies every configured architecture on native runners and handles publishing.
+`source-<upstream-commit>` for recipes that fetch source. Revision labels record the
+packaging commit; recipes that fetch source record their upstream reference as the
+image version. Published images include provenance and SBOMs.
+Pin deployed images by digest.
 
 The repository needs Write access under each existing GHCR package's
 **Settings → Manage Actions Access**. Publishing uses `GITHUB_TOKEN`.
 
-Preview updates with `mise run dependencies:check`; apply reviewed changes with
-`mise run dependencies:update`. The shared updater discovers configured Git pins from `source.json`
-and inline Python `package==version` pins from Dockerfiles. Versioned sources follow releases; branch sources follow
-their configured branch. Prefer native Updatecli crawlers where available; they
-handle base images and Actions. Actions use the crawler’s standard version selection
-without per-action exceptions, so reviewed updates may replace major aliases with
-full release tags.
-Gatus/Tailscale follows its Docker image pins only. macOS builds the pinned Reims
-revision with its upstream installer; that revision owns its QEMU, firmware and
-helper dependencies. Set `GITHUB_TOKEN` for authenticated GitHub lookups.
+## Dependencies
 
-Update groups follow their ecosystems: `actions`, `docker`, `git` and `python`.
+Preview updates, then apply reviewed changes. `--labels` selects one group:
+`group:actions`, `group:docker`, `group:git` or `group:python`.
+
+```sh
+mise run dependencies:check
+mise run dependencies:update --labels group:docker
+```
