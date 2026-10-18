@@ -69,7 +69,6 @@ ENV CPU_CORES=4 \
     SELKIES_MODE=websockets \
     SELKIES_WAYLAND=false \
     VERSION=26
-LABEL org.opencontainers.image.source="https://github.com/maxexcloo/images"
 EXPOSE 8080
 VOLUME /storage
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 CMD /usr/local/lib/macos/health.sh
