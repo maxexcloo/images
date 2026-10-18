@@ -82,8 +82,10 @@ Outdated push runs fail before building so they cannot advance the successful
 publication baseline.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
-Tags include `latest`, `sha-<build-commit>` and
-`source-<upstream-commit>` for recipes that fetch source. Revision labels record the
+Tags include `latest`, `sha-<build-commit>`, the upstream release reference
+(for example `v5.37.0`) for recipes that specify one, and
+`source-<upstream-commit>` for recipes that fetch source. Release tags move when
+packaging changes rebuild the same upstream release. Revision labels record the
 packaging commit; recipes that fetch source record their upstream reference as the
 image version. Published images include provenance and SBOMs.
 Pin deployed images by digest.
