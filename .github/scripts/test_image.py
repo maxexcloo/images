@@ -73,6 +73,13 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(targets["update-git-gatus-tailscale"], {"reference"})
         self.assertEqual(targets["update-git-atvloadly"], {"reference", "revision"})
 
+    def test_release_references_become_version_tags(self):
+        versions = {
+            recipe["image"]: recipe["version"] for recipe in matrix()["include"]
+        }
+        self.assertEqual(versions["betterbench"], "")
+        self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
+
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
