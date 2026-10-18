@@ -1,4 +1,6 @@
 # syntax=docker/dockerfile:1
+# check=skip=InvalidDefaultArgInFrom
+ARG UPSTREAM_REFERENCE
 FROM golang:1.26.9-trixie@sha256:f06b7122f888680048afb247c4e5f49c0069eb6c4c1ccae0f3f4834527a8d22c AS source
 ARG UPSTREAM_REFERENCE
 WORKDIR /source
@@ -18,7 +20,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
     go test ./internal/manager ./internal/service \
     && go build -ldflags="-extldflags=-static -linkmode=external -X github.com/bitxeno/atvloadly/internal/app/build.Version=${UPSTREAM_REFERENCE} -X github.com/bitxeno/atvloadly/internal/app/build.Mode=production" -o /atvloadly -tags netgo,osusergo .
 
-FROM bitxeno/atvloadly:v0.6.2@sha256:777373b81714f79a7047ff6cd1a849ae7043566d689db699c4088bf62e7648e6
+FROM bitxeno/atvloadly:${UPSTREAM_REFERENCE}
 ENV SERVICE_PORT=5533
 # The upstream image leaves /tmp unwritable by apt's unprivileged helper.
 RUN chmod 1777 /tmp \

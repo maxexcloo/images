@@ -15,7 +15,9 @@ ComfyUI ROCm and macOS support AMD64; other active recipes support AMD64 and ARM
 | macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`     |
 
 Each recipe owns a Dockerfile and `source.json` with the upstream repository.
-Recipes that fetch source also specify its reference and pinned commit.
+Recipes built from an upstream release or source specify its reference once; recipes
+that fetch source also pin its commit. Builds receive the reference as
+`UPSTREAM_REFERENCE`, which selects matching upstream image tags.
 Recipes reuse pinned upstream images where available
 and fetch source only when needed. This repository keeps packaging, runtime
 support and local `patches/`.
@@ -49,8 +51,7 @@ mise exec -- python .github/scripts/image.py build atvloadly
 
 Atvloadly includes pairing completion and discovery refresh patches. Application
 dependencies follow upstream; local patches and overrides address demonstrated
-functional issues. Its upstream runtime image tag must match the compiled source
-reference; checks fail when only one moves. Upstream browser and Go tests run during its build. Deployment
+functional issues. Upstream browser and Go tests run during its build. Deployment
 requires host networking and
 `seccomp=unconfined` for the upstream signing tools.
 
