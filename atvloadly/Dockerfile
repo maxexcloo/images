@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 # check=skip=InvalidDefaultArgInFrom
 ARG UPSTREAM_REFERENCE
-FROM golang:1.26-trixie AS source
+FROM golang:1.27-trixie AS source
 ARG UPSTREAM_REFERENCE
 WORKDIR /source
 COPY --from=upstream / /source
 COPY patches/ /tmp/patches/
 RUN git apply /tmp/patches/*.patch
 
-FROM node:24-trixie-slim AS frontend
+FROM node:26-trixie-slim AS frontend
 WORKDIR /source/web/static
 COPY --from=source /source /source
 RUN --mount=type=cache,target=/root/.npm npm ci && npm test && npm run build
