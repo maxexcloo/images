@@ -18,7 +18,7 @@ Each recipe owns a Dockerfile and `source.json` with the upstream repository.
 Recipes built from an upstream release or source specify its reference once; recipes
 that fetch source also pin its commit. Builds receive the reference as
 `UPSTREAM_REFERENCE`, which selects matching upstream image tags.
-Recipes reuse pinned upstream images where available
+Recipes reuse upstream images where available
 and fetch source only when needed. This repository keeps packaging, runtime
 support and local `patches/`.
 The generic builder in `.github/scripts/` discovers recipes from `source.json`.
@@ -29,7 +29,7 @@ Deployment repositories own credentials, configuration and persistent data.
 Install the [shared Mise configuration](https://github.com/maxexcloo/dotfiles#shared-tools--tasks)
 before running local Mise tasks.
 
-Install the pinned tools and check repository configuration:
+Install the tools and check repository configuration:
 
 ```sh
 mise install
@@ -59,10 +59,10 @@ BetterBench has no upstream container image, so its minimal recipe installs the
 upstream application and runs upstream tests; dependency versions can change
 between builds of the same source.
 
-ComfyUI uses the pinned upstream ROCm base and its Python installation.
-Verify ComfyUI GPU compatibility on the target ROCm host before changing its image
-pin; its saved core, models and state remain owned by the deployment.
-Gatus/Tailscale combines binaries from pinned upstream images; deployments supply
+ComfyUI uses the upstream ROCm base and its Python installation.
+Verify ComfyUI GPU compatibility on the target ROCm host before deploying a new
+image; its base tag floats. Its saved core, models and state remain owned by the deployment.
+Gatus/Tailscale combines binaries from upstream images; deployments supply
 startup and monitoring configuration.
 
 The [macOS recipe](macos/README.md) includes a Compose example for Linux and
@@ -88,7 +88,7 @@ Tags include `latest`, `sha-<build-commit>`, the upstream release reference
 packaging changes rebuild the same upstream release. Revision labels record the
 packaging commit; recipes that fetch source record their upstream reference as the
 image version. Published images include provenance and SBOMs.
-Pin deployed images by digest.
+Pin deployed images by release or `sha-` tag.
 
 The repository needs Write access under each existing GHCR package's
 **Settings → Manage Actions Access**. Publishing uses `GITHUB_TOKEN`.
