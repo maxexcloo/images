@@ -2,9 +2,9 @@
 # check=skip=InvalidDefaultArgInFrom
 ARG UPSTREAM_REFERENCE
 FROM docker.io/twinproduction/gatus:${UPSTREAM_REFERENCE} AS gatus
-FROM docker.io/tailscale/tailscale:v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d AS tailscale
+FROM docker.io/tailscale/tailscale:v1.104.1 AS tailscale
 
-FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS runtime
+FROM alpine:3.24 AS runtime
 RUN apk add --no-cache ca-certificates iptables ip6tables \
     && mkdir -p /var/cache/tailscale /var/lib/tailscale /var/run/tailscale
 WORKDIR /app
