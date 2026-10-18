@@ -21,7 +21,11 @@ class MatrixTests(unittest.TestCase):
                 "README.md",
                 ".mise.toml",
                 ".updatecli.d/mise.yaml",
+                ".github/scripts/test_image.py",
                 ".github/scripts/updates.py",
+                "macos/README.md",
+                "macos/compose.yaml",
+                "macos/verify-stream.sh",
             ]
         )
         self.assertFalse(result["required"])
