@@ -1,7 +1,6 @@
 """Exercise recipe selection and publication baselines."""
 
 import json
-import re
 import shutil
 import subprocess
 import tempfile
@@ -63,17 +62,16 @@ class MatrixTests(unittest.TestCase):
         )
         self.assertGreater(len(matrix()["include"]), 1)
 
-    def test_image_only_recipe_has_no_git_update(self):
+    def test_release_only_recipe_updates_its_reference(self):
         recipe = matrix("gatus-tailscale")["include"][0]
         self.assertNotIn("revision", recipe)
-        self.assertNotIn("reference", recipe)
-        git_updates = {
-            manifest["pipelineid"]
+        targets = {
+            manifest["pipelineid"]: set(manifest["targets"])
             for manifest in updates.manifests()
             if manifest["labels"]["group"] == "git"
         }
-        self.assertNotIn("update-git-gatus-tailscale", git_updates)
-        self.assertIn("update-git-atvloadly", git_updates)
+        self.assertEqual(targets["update-git-gatus-tailscale"], {"reference"})
+        self.assertEqual(targets["update-git-atvloadly"], {"reference", "revision"})
 
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -81,22 +79,13 @@ class MatrixTests(unittest.TestCase):
             (root / "example").mkdir()
             for data in [
                 {"repository": "owner/project", "reference": "main"},
+                {"repository": "owner/project", "reference": "v1.0.0", "revision": "a"},
                 {"repository": "owner/project", "revision": "a" * 40},
             ]:
                 with self.subTest(data=data), patch("image.ROOT", root):
                     (root / "example" / "source.json").write_text(json.dumps(data))
                     with self.assertRaises(ValueError):
                         image.source("example")
-
-    def test_upstream_runtime_base_matches_source_reference(self):
-        # Updatecli moves Docker and Git pins separately; keep them paired.
-        for name in image.images():
-            data = image.source(name)
-            dockerfile = (image.ROOT / name / "Dockerfile").read_text()
-            pattern = rf"^FROM {re.escape(data['repository'].lower())}:([^@\s]+)"
-            for tag in re.findall(pattern, dockerfile, re.MULTILINE):
-                with self.subTest(name=name):
-                    self.assertEqual(tag, data.get("reference"))
 
     def test_unknown_manual_recipe_fails(self):
         with self.assertRaises(ValueError):

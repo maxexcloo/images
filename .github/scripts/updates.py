@@ -7,7 +7,7 @@ import shlex
 import subprocess
 from pathlib import Path
 
-from image import ROOT, images, source
+from image import RELEASE, ROOT, images, source
 
 
 def pin_target(path, key, sourceid):
@@ -18,10 +18,10 @@ def pin_target(path, key, sourceid):
     }
 
 
-def source_manifest(name, repository, reference, path):
-    release = bool(re.fullmatch(r"v?\d+\.\d+\.\d+(?:[-+].*)?", reference))
+def source_manifest(name, repository, reference, pinned, path):
+    release = bool(RELEASE.fullmatch(reference))
     sources = {}
-    targets = {"revision": pin_target(path, "revision", "revision")}
+    targets = {"revision": pin_target(path, "revision", "revision")} if pinned else {}
     if release:
         owner, project = repository.split("/")
         sources["version"] = {
@@ -34,6 +34,7 @@ def source_manifest(name, repository, reference, path):
             },
         }
         targets["reference"] = pin_target(path, "reference", "version")
+    if release and pinned:
         sources["revision"] = {
             "kind": "shell",
             "spec": {
@@ -48,7 +49,7 @@ def source_manifest(name, repository, reference, path):
                 ],
             },
         }
-    else:
+    elif pinned:
         sources["revision"] = {
             "kind": "gitcommit",
             "spec": {
@@ -68,9 +69,13 @@ def source_manifest(name, repository, reference, path):
 def manifests():
     for name in images():
         data = source(name)
-        if "revision" in data:
+        if "reference" in data:
             yield source_manifest(
-                name, data["repository"], data["reference"], Path(name) / "source.json"
+                name,
+                data["repository"],
+                data["reference"],
+                "revision" in data,
+                Path(name) / "source.json",
             )
         path = Path(name) / "Dockerfile"
         text = (ROOT / path).read_text()

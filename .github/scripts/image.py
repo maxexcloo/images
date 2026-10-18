@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+RELEASE = re.compile(r"v?\d+\.\d+\.\d+(?:[-+].*)?")
 
 
 def images():
@@ -19,10 +20,16 @@ def source(name):
     data = json.loads((ROOT / name / "source.json").read_text())
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", data["repository"]):
         raise ValueError(f"Invalid upstream repository for {name}")
-    if ("reference" in data or "revision" in data) and (
-        not isinstance(data.get("reference"), str)
-        or not data["reference"]
-        or not re.fullmatch(r"[0-9a-f]{40}", data.get("revision", ""))
+    # A release reference alone selects upstream image tags; a revision also fetches source.
+    reference = data.get("reference", "")
+    if ("reference" in data or "revision" in data) and not (
+        isinstance(reference, str)
+        and reference
+        and (
+            re.fullmatch(r"[0-9a-f]{40}", str(data["revision"]))
+            if "revision" in data
+            else RELEASE.fullmatch(reference)
+        )
     ):
         raise ValueError(f"Invalid pinned source for {name}")
     architectures = data.setdefault("architectures", ["amd64", "arm64"])
@@ -125,11 +132,11 @@ def main():
                 continue
             raise ValueError(f"{name} does not support {platform}")
         command = ["docker", "buildx", "build"]
+        if "reference" in data:
+            command.extend(["--build-arg", f"UPSTREAM_REFERENCE={data['reference']}"])
         if "revision" in data:
             command.extend(
                 [
-                    "--build-arg",
-                    f"UPSTREAM_REFERENCE={data['reference']}",
                     "--build-arg",
                     f"UPSTREAM_REVISION={data['revision']}",
                     "--build-context",
