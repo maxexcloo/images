@@ -28,8 +28,7 @@ four vCPUs, 4 GiB RAM and a 64 GiB virtual disk. `CPU_CORES`, `RAM_SIZE` and
 `DISK_SIZE` configure those values; `VERSION` chooses the Recovery version when
 creating a VM. Disk size and version do not recreate an existing VM.
 
-Persistent state lives in `/storage/config` and `/storage/reims`. Previous Dockur
-VM directories are left intact; the native runtime creates its own VM. Download
+Persistent state lives in `/storage/config` and `/storage/reims`. Download
 progress appears in the container log; guest and graphics logs live under
 `/storage/reims/vms/mac/logs`. Do not print whole QEMU command logs when sharing
 credentials or machine identity could be included.
@@ -47,14 +46,10 @@ need `/dev/udmabuf` for guest-memory import. The launcher grants the container u
 its mapped device groups. It does not change host drivers, modules or sysctls.
 Reims' host kernel and `vm.max_map_count` requirements still apply.
 
-macOS requires monotonic guest time. Kimbap's unstable host TSC causes an early
-`Non-monotonic time` panic with four vCPUs. Its verified Recovery configuration
-uses `CPU_CORES=1` and Compose `cpuset: "14,15"`, the sibling threads of one
-physical core on that host. The affinity applies to the whole container, so the
-guest, graphics support and streaming share that core's CPU capacity. This avoids
-host clock changes but limits CPU throughput; native GPU rendering and hardware
-streaming remain available. CPU numbers are host-specific, so select affinity
-from the target's CPU topology.
+macOS requires monotonic guest time. On hosts with an unstable TSC, an early
+`Non-monotonic time` panic can be avoided with `CPU_CORES=1` and a Compose
+`cpuset` limited to the sibling threads of one physical core, at the cost of CPU
+throughput.
 
 Linux-based TrueNAS Docker Apps can use the Compose example through
 **Apps → Install Via YAML**. Bind a writable dataset to `/storage`, mount the
