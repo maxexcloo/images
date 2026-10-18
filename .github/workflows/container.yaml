@@ -97,6 +97,7 @@ jobs:
         with:
           build-args: |
             UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
+            UPSTREAM_REPOSITORY=${{ matrix.recipe.repository }}
             UPSTREAM_REVISION=${{ matrix.recipe.revision }}
           build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
