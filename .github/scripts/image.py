@@ -38,19 +38,24 @@ def source(name):
 
 def affected_images(names, changed_files):
     selected = set()
-    metadata = {
+    # Changes outside image build contexts validate configuration without rebuilding.
+    metadata_names = {".gitignore", "AGENTS.md", "LICENSE", "README.md", "compose.yaml"}
+    metadata_paths = {
         ".github/scripts/updates.py",
-        ".gitignore",
         ".mise.toml",
-        "AGENTS.md",
-        "LICENSE",
-        "README.md",
+        "macos/verify-stream.sh",
     }
     for path in changed_files:
         name = path.split("/", 1)[0]
+        if (
+            path in metadata_paths
+            or Path(path).name in metadata_names
+            or path.startswith((".github/scripts/test_", ".updatecli.d/"))
+        ):
+            continue
         if name in names:
             selected.add(name)
-        elif path not in metadata and not path.startswith((".updatecli.d/", "docs/")):
+        else:
             return set(names)
     return selected
 
@@ -100,38 +105,25 @@ def main():
     parser.add_argument("action", choices=["build", "matrix"])
     parser.add_argument("image", default="all", nargs="?")
     parser.add_argument("--changed-from")
-    parser.add_argument("--platform")
-    parser.add_argument("--tag")
     args = parser.parse_args()
     if args.action == "matrix":
         changed_files = changes_since(args.changed_from)
         print(json.dumps(matrix(args.image, changed_files)))
         return
     selected = images() if args.image == "all" else [args.image]
-    if args.tag and len(selected) != 1:
-        parser.error("--tag requires a single image")
-    platform = args.platform
-    if platform is None:
-        platform = subprocess.check_output(
-            [
-                "docker",
-                "info",
-                "--format",
-                "{{.OSType}}/{{.Architecture}}",
-            ],
-            text=True,
-        ).strip()
-        platform = platform.replace("/aarch64", "/arm64").replace("/x86_64", "/amd64")
+    platform = subprocess.check_output(
+        ["docker", "info", "--format", "{{.OSType}}/{{.Architecture}}"], text=True
+    ).strip()
+    platform = platform.replace("/aarch64", "/arm64").replace("/x86_64", "/amd64")
     for name in selected:
         data = source(name)
-        if platform and platform.split("/")[1] not in data["architectures"]:
-            if args.image == "all" and not args.platform:
+        if platform.split("/")[1] not in data["architectures"]:
+            if args.image == "all":
                 print(
                     f"Skipping {name}: {platform} is outside its configured architectures."
                 )
                 continue
             raise ValueError(f"{name} does not support {platform}")
-        tag = args.tag or f"images-{name}:test"
         command = ["docker", "buildx", "build"]
         if "revision" in data:
             command.extend(
@@ -144,10 +136,7 @@ def main():
                     f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
                 ]
             )
-        command.append("--load")
-        if args.platform:
-            command.extend(["--platform", args.platform])
-        command.extend(["--tag", tag, name])
+        command.extend(["--load", "--tag", f"images-{name}:test", name])
         subprocess.run(command, check=True, cwd=ROOT)
 
 

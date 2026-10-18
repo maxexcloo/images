@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie@sha256:4926b252eabd23dce9b9d52eedcc17588fff4b2c28c3930766516467028b06e7 AS build
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -69,7 +70,6 @@ ENV CPU_CORES=4 \
     SELKIES_MODE=websockets \
     SELKIES_WAYLAND=false \
     VERSION=26
-LABEL org.opencontainers.image.source="https://github.com/maxexcloo/images"
 EXPOSE 8080
 VOLUME /storage
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 CMD /usr/local/lib/macos/health.sh
