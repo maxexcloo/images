@@ -134,7 +134,13 @@ def main():
                 )
                 continue
             raise ValueError(f"{name} does not support {platform}")
-        command = ["docker", "buildx", "build"]
+        command = [
+            "docker",
+            "buildx",
+            "build",
+            "--build-arg",
+            f"UPSTREAM_REPOSITORY={data['repository']}",
+        ]
         if "reference" in data:
             command.extend(["--build-arg", f"UPSTREAM_REFERENCE={data['reference']}"])
         if "revision" in data:

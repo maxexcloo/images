@@ -16,8 +16,9 @@ ComfyUI ROCm and macOS support AMD64; other active recipes support AMD64 and ARM
 
 Each recipe owns a Dockerfile and `source.json` with the upstream repository.
 Recipes built from an upstream release or source specify its reference once; recipes
-that fetch source also pin its commit. Builds receive the reference as
-`UPSTREAM_REFERENCE`, which selects matching upstream image tags.
+that fetch source also pin its commit. Builds receive them as
+`UPSTREAM_REPOSITORY`, `UPSTREAM_REFERENCE` and `UPSTREAM_REVISION`; the reference
+selects matching upstream image tags.
 Recipes reuse upstream images where available
 and fetch source only when needed. This repository keeps packaging, runtime
 support and local `patches/`.
