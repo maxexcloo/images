@@ -82,11 +82,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Prepare Space For ROCm
-        if: matrix.recipe.image == 'comfyui-rocm'
-        run: |
-          sudo rm --force --recursive /opt/ghc /usr/local/lib/android /usr/share/dotnet
-          df -h /
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Log In to GHCR
@@ -112,12 +107,11 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
             ${{ matrix.recipe.reference && format('org.opencontainers.image.version={0}', matrix.recipe.reference) || '' }}
-          load: ${{ needs.prepare.outputs.publish-enabled != 'true' }}
           platforms: linux/${{ matrix.architecture }}
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
           push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           sbom: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
-          tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || format('images-{0}:test', matrix.recipe.image) }}
+          tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || '' }}
       - name: Record Digest
         if: needs.prepare.outputs.publish-enabled == 'true'
         env:
