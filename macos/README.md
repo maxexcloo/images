@@ -8,7 +8,7 @@ backend.
 ## Run
 
 Images build and publish on GitHub. Use the Compose example with a published GHCR
-image, preferably pinned by digest. Create a browser password file, then start:
+image, preferably pinned by its `sha-` tag. Create a browser password file, then start:
 
 ```sh
 cd macos

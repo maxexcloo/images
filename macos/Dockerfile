@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
-FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie@sha256:4926b252eabd23dce9b9d52eedcc17588fff4b2c28c3930766516467028b06e7 AS build
+FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie AS build
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ARG UPSTREAM_REPOSITORY
 ARG UPSTREAM_REVISION
 ENV CARGO_BUILD_JOBS=2 \
     CARGO_INSTALL_ROOT=/out/usr/lib/reims \
@@ -20,7 +21,7 @@ RUN apt-get update -o APT::Update::Error-Mode=any \
 RUN <<'BUILD'
 set -euo pipefail
 git init /src/reims
-git -C /src/reims remote add origin https://github.com/steelbrain/reims-vgpu.git
+git -C /src/reims remote add origin "https://github.com/$UPSTREAM_REPOSITORY.git"
 git -C /src/reims fetch --depth=1 origin "$UPSTREAM_REVISION"
 git -C /src/reims checkout --detach FETCH_HEAD
 bash /src/reims/scripts/install-ctl.sh --yes
@@ -41,7 +42,7 @@ RUN ldd /out/usr/lib/reims/bin/reims-* /out/usr/lib/reims/qemu/bin/qemu-* \
     | awk '/=> \// { print $3 }' | xargs realpath | sort -u \
     | xargs dpkg-query --search | cut -d: -f1 | sort -u > /out/runtime-packages
 
-FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie@sha256:4926b252eabd23dce9b9d52eedcc17588fff4b2c28c3930766516467028b06e7
+FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
