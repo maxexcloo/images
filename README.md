@@ -96,10 +96,12 @@ The repository needs Write access under each existing GHCR package's
 
 ## Dependencies
 
-Preview updates, then apply reviewed changes. `--labels` selects one group:
-`group:actions`, `group:docker`, `group:git` or `group:python`.
+Renovate (`renovate.json5`) opens pull requests for actions, base images, Python
+packages pinned in Dockerfiles and each `source.json` upstream: release references
+move to the latest GitHub release with its commit, and branch references follow the
+branch's latest commit.
 
 ```sh
 mise run dependencies:check
-mise run dependencies:update --labels group:docker
+mise run dependencies:update
 ```

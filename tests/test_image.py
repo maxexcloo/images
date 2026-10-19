@@ -3,13 +3,15 @@
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / ".github" / "scripts"))
+
 import image
-import updates
 from image import changes_since, matrix
 
 
@@ -19,9 +21,8 @@ class MatrixTests(unittest.TestCase):
             changed_files=[
                 "README.md",
                 ".mise.toml",
-                ".updatecli.d/mise.yaml",
-                ".github/scripts/test_image.py",
-                ".github/scripts/updates.py",
+                "renovate.json5",
+                "tests/test_image.py",
                 "macos/README.md",
                 "macos/compose.yaml",
                 "macos/verify-stream.sh",
@@ -61,17 +62,6 @@ class MatrixTests(unittest.TestCase):
             [build["architecture"] for build in result["build"]], ["amd64"]
         )
         self.assertGreater(len(matrix()["include"]), 1)
-
-    def test_release_only_recipe_updates_its_reference(self):
-        recipe = matrix("gatus-tailscale")["include"][0]
-        self.assertNotIn("revision", recipe)
-        targets = {
-            manifest["pipelineid"]: set(manifest["targets"])
-            for manifest in updates.manifests()
-            if manifest["labels"]["group"] == "git"
-        }
-        self.assertEqual(targets["update-git-gatus-tailscale"], {"reference"})
-        self.assertEqual(targets["update-git-atvloadly"], {"reference", "revision"})
 
     def test_release_references_become_version_tags(self):
         versions = {

@@ -1,0 +1,33 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["github>maxexcloo/dotfiles//renovate/default.json5"],
+  customManagers: [
+    {
+      customType: "regex",
+      datasourceTemplate: "github-releases",
+      description: "Recipe upstream releases, with the release commit when source is fetched",
+      managerFilePatterns: ["/(^|/)source\\.json$/"],
+      matchStrings: [
+        '"reference":\\s*"(?<currentValue>v?\\d+(?:\\.\\d+)+[^"]*)",\\s*"repository":\\s*"(?<depName>[^"]+)"(?:,\\s*"revision":\\s*"(?<currentDigest>[a-f0-9]{40})")?',
+      ],
+    },
+    {
+      customType: "regex",
+      datasourceTemplate: "git-refs",
+      description: "Recipe upstream branches pinned to a commit",
+      managerFilePatterns: ["/(^|/)source\\.json$/"],
+      // Branch references start with a letter, unlike release references such as v1.2.3.
+      matchStrings: [
+        '"reference":\\s*"(?<currentValue>(?:[a-uw-zA-Z]|v[^\\d"])[^"]*)",\\s*"repository":\\s*"(?<depName>[^"]+)",\\s*"revision":\\s*"(?<currentDigest>[a-f0-9]{40})"',
+      ],
+      packageNameTemplate: "https://github.com/{{depName}}",
+    },
+    {
+      customType: "regex",
+      datasourceTemplate: "pypi",
+      description: "Python packages pinned in Dockerfile commands",
+      managerFilePatterns: ["/(^|/)Dockerfile$/"],
+      matchStrings: ["\\b(?<depName>[\\w.-]+)==(?<currentValue>\\d[\\w.+!-]*)"],
+    },
+  ],
+}

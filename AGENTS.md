@@ -8,7 +8,7 @@
 - Use upstream dependencies when the image works. Add local patches or dependency overrides only to fix demonstrated functional issues, not solely to address vulnerability scan findings.
 - Run build-time tests where provided.
 - Keep existing GHCR package names.
-- Prefer native Updatecli autodiscovery; use `.github/scripts/updates.py` only for recipe metadata it does not support.
+- Keep `renovate.json5` managers generic: they discover every recipe's `source.json` pins and Dockerfile Python pins.
 
 ## Documentation
 
