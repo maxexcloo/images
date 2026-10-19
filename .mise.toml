@@ -16,6 +16,7 @@ depends = [
   "check:python",
   "check:shell",
   "check:updates",
+  "check:whitespace",
   "test:python",
 ]
 
