@@ -70,6 +70,14 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(versions["betterbench"], "")
         self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
 
+    def test_recipes_without_a_reference_combine_base_tags(self):
+        versions = {
+            recipe["image"]: recipe["version"] for recipe in matrix()["include"]
+        }
+        self.assertRegex(
+            versions["comfyui-radiance"], r"^v\d+\.\d+\.\d+-radiance\d+\.\d+\.\d+$"
+        )
+
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -96,9 +104,8 @@ class PublicationBaselineTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         for name in image.images():
             (self.root / name).mkdir()
-            shutil.copy(
-                image.ROOT / name / "source.json", self.root / name / "source.json"
-            )
+            for file in ["Dockerfile", "source.json"]:
+                shutil.copy(image.ROOT / name / file, self.root / name / file)
         self.git("init", "--quiet")
         self.commit()
         self.base = self.git("rev-parse", "HEAD")

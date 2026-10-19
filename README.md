@@ -67,7 +67,7 @@ Verify ComfyUI GPU compatibility on the target ROCm host before deploying a new
 image; its base tag floats. Its saved core, models and state remain owned by the deployment.
 ComfyUI Radiance adds Radiance’s runtime and its separate ROCm libraries to the
 published ComfyUI ROCm image. Both base images are pinned in its Dockerfile, so it
-rebuilds after Renovate moves either pin; it publishes no release tag.
+rebuilds after Renovate moves either pin.
 Gatus/Tailscale combines binaries from upstream images; deployments supply
 startup and monitoring configuration.
 
@@ -90,7 +90,9 @@ Runtime changes and manual runs on `main` publish verified architecture images, 
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Tags include `latest`, `sha-<build-commit>`, the upstream release reference
 (for example `v5.37.0`) for recipes that specify one, and
-`source-<upstream-commit>` for recipes that fetch source. Release tags move when
+`source-<upstream-commit>` for recipes that fetch source. Recipes without a
+reference combine their exact base tags instead, final base first, for example
+`v0.41.0-radiance1.8.1`; Renovate's `loose` versioning orders them. Release tags move when
 packaging changes rebuild the same upstream release. Revision labels record the
 packaging commit; recipes that fetch source record their upstream reference as the
 image version. Published images include provenance and SBOMs.

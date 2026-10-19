@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = re.compile(r"v?\d+\.\d+\.\d+(?:[-+].*)?")
+BASE = re.compile(r"^FROM\s+(\S+)", re.MULTILINE)
 
 
 def images():
@@ -43,6 +44,18 @@ def source(name):
     return data
 
 
+def base_version(name):
+    # Combine exact base tags, final base first, for example v0.41.0-radiance1.8.1.
+    bases = BASE.findall((ROOT / name / "Dockerfile").read_text())
+    parts = []
+    for index, base in enumerate(reversed(bases)):
+        image, _, tag = base.rpartition(":")
+        if not image or "/" in tag or not RELEASE.fullmatch(tag):
+            raise ValueError(f"{name} needs exact base tags to derive its version")
+        parts.append(tag if index == 0 else image.rsplit("/", 1)[-1] + tag)
+    return "-".join(parts)
+
+
 def affected_images(names, changed_files):
     selected = set()
     # Changes outside image build contexts validate configuration without rebuilding.
@@ -68,7 +81,10 @@ def matrix(image="all", changed_files=None):
     catalogue = {name: dict(image=name, **source(name)) for name in images()}
     for recipe in catalogue.values():
         reference = recipe.get("reference", "")
-        recipe["version"] = reference if RELEASE.fullmatch(reference) else ""
+        if not reference:
+            recipe["version"] = base_version(recipe["image"])
+        else:
+            recipe["version"] = reference if RELEASE.fullmatch(reference) else ""
     if image != "all" and image not in catalogue:
         raise ValueError(f"Unknown image: {image}")
     selected = set(catalogue) if image == "all" else {image}

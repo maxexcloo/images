@@ -107,7 +107,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
-            ${{ matrix.recipe.reference && format('org.opencontainers.image.version={0}', matrix.recipe.reference) || '' }}
+            ${{ (matrix.recipe.reference || matrix.recipe.version) && format('org.opencontainers.image.version={0}', matrix.recipe.reference || matrix.recipe.version) || '' }}
           platforms: linux/${{ matrix.architecture }}
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
           push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
