@@ -80,7 +80,7 @@ and skip image builds. Required checks always report.
 Publishing runs on the same branch are serialised. Outdated manual runs on `main`
 skip builds; manual runs of its current revision can rebuild selected images.
 Outdated push runs fail before building so they cannot advance the successful
-publication baseline.
+publication baseline. A baseline missing from rewritten history rebuilds every recipe.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
 Each publication adds an immutable exact tag, `<reference>-<UTC timestamp>`, from the

@@ -89,6 +89,17 @@ def matrix(image="all", changed_files=None):
 def changes_since(revision):
     if not revision or revision == "0" * 40:
         return None
+    # A baseline lost to rewritten history cannot limit the rebuild.
+    if (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{revision}^{{commit}}"],
+            capture_output=True,
+            check=False,
+            cwd=ROOT,
+        ).returncode
+        != 0
+    ):
+        return None
     # A delayed run must not overwrite a newer successful publication.
     if (
         subprocess.run(

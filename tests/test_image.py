@@ -148,6 +148,7 @@ class PublicationBaselineTests(unittest.TestCase):
     def test_no_successful_baseline_builds_all(self):
         self.assertTrue(matrix(changed_files=changes_since(""))["required"])
         self.assertTrue(matrix(changed_files=changes_since("0" * 40))["required"])
+        self.assertTrue(matrix(changed_files=changes_since("1" * 40))["required"])
 
 
 if __name__ == "__main__":
