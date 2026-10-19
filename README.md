@@ -83,18 +83,13 @@ Outdated push runs fail before building so they cannot advance the successful
 publication baseline. A baseline missing from rewritten history rebuilds every recipe.
 Runtime changes and manual runs on `main` publish verified architecture images, then assemble
 multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
-Each publication adds an immutable exact tag, `<reference>-<UTC timestamp>`, from the
-recipe's `source.json` reference and the publication time, for example
-`v0.41.0-20261019083012` or `main-20261019083012` for branch recipes. Tags also
-include `latest`, `sha-<build-commit>`, the upstream release reference (for example
-`v5.37.0`) for recipes that specify one, and `source-<upstream-commit>` for recipes
-that fetch source. Release reference tags move when packaging changes rebuild the
-same upstream release. Revision labels record the packaging commit; recipes that
-fetch source record their upstream reference as the image version. Published images
-include provenance and SBOMs.
-Pin deployed images by exact tag. Renovate orders exact tags with regex versioning
-`^(?:v?(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)|(?<compatibility>[a-z][\w.]*))-(?<build>\d{14})$`,
-which ignores the moving tags.
+Tags include `latest`, `sha-<build-commit>`, the upstream release reference
+(for example `v5.37.0`) for recipes that specify one, and
+`source-<upstream-commit>` for recipes that fetch source. Release tags move when
+packaging changes rebuild the same upstream release. Revision labels record the
+packaging commit; recipes that fetch source record their upstream reference as the
+image version. Published images include provenance and SBOMs.
+Pin deployed images by release or `sha-` tag.
 
 The repository needs Write access under each existing GHCR package's
 **Settings → Manage Actions Access**. Publishing uses `GITHUB_TOKEN`.
