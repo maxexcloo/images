@@ -160,12 +160,9 @@ jobs:
           ARCHITECTURES: ${{ join(matrix.recipe.architectures, ' ') }}
           BUILD_REVISION: ${{ github.sha }}
           IMAGE_NAME: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
-          UPSTREAM_REFERENCE: ${{ matrix.recipe.reference }}
           UPSTREAM_REVISION: ${{ matrix.recipe.revision }}
           UPSTREAM_VERSION: ${{ matrix.recipe.version }}
         run: |
-          # The UTC publication time makes each build's exact tag unique and orderable.
-          build_tag="$IMAGE_NAME:$UPSTREAM_REFERENCE-$(date -u +%Y%m%d%H%M%S)"
           set --
           for architecture in $ARCHITECTURES; do
             digest=$(cat "digests/$architecture")
@@ -178,12 +175,10 @@ jobs:
             set -- --tag "$IMAGE_NAME:$UPSTREAM_VERSION" "$@"
           fi
           docker buildx imagetools create \
-            --tag "$build_tag" \
             --tag "$IMAGE_NAME:latest" \
             --tag "$IMAGE_NAME:sha-$BUILD_REVISION" \
             "$@"
-          docker buildx imagetools inspect "$build_tag"
-          echo "Published \`$build_tag\`" >> "$GITHUB_STEP_SUMMARY"
+          docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
 
   check:
     name: Check
