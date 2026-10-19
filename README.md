@@ -1,18 +1,20 @@
 # Images
 
 Pinned upstream applications packaged for personal infrastructure. Active builds publish
-Atvloadly, BetterBench, ComfyUI ROCm, Gatus/Tailscale and macOS under `ghcr.io/maxexcloo`.
-ComfyUI ROCm and macOS support AMD64; other active recipes support AMD64 and ARM64.
+Atvloadly, BetterBench, ComfyUI Radiance, ComfyUI ROCm, Gatus/Tailscale and macOS under
+`ghcr.io/maxexcloo`. ComfyUI Radiance, ComfyUI ROCm and macOS support AMD64; other active
+recipes support AMD64 and ARM64.
 
 ## Images
 
-| Image           | Upstream                                                          | Runtime                                                                                                  |
-| --------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery |
-| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                          |
-| ComfyUI ROCm    | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; deployments own GPU allocation, models and persisted state                           |
-| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                  |
-| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`     |
+| Image            | Upstream                                                          | Runtime                                                                                                                                |
+| ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Atvloadly        | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                               |
+| BetterBench      | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                        |
+| ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | ComfyUI ROCm with the [Radiance](https://codeberg.org/StillDeadcode/radiance) runtime in `/opt/radiance`; deployments supply its nodes |
+| ComfyUI ROCm     | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; deployments own GPU allocation, models and persisted state                                                         |
+| Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                |
+| macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                   |
 
 Each recipe owns a Dockerfile and `source.json` with the upstream repository.
 Recipes built from an upstream release or source specify its reference once; recipes
@@ -63,6 +65,9 @@ between builds of the same source.
 ComfyUI uses the upstream ROCm base and its Python installation.
 Verify ComfyUI GPU compatibility on the target ROCm host before deploying a new
 image; its base tag floats. Its saved core, models and state remain owned by the deployment.
+ComfyUI Radiance adds Radiance’s runtime and its separate ROCm libraries to the
+published ComfyUI ROCm image. Both base images are pinned in its Dockerfile, so it
+rebuilds after Renovate moves either pin; it publishes no release tag.
 Gatus/Tailscale combines binaries from upstream images; deployments supply
 startup and monitoring configuration.
 
