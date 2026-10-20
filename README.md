@@ -1,9 +1,10 @@
 # Images
 
-Pinned upstream applications packaged for personal infrastructure. Active builds publish
-Atvloadly, BetterBench, ComfyUI Radiance, ComfyUI ROCm, Gatus/Tailscale and macOS under
-`ghcr.io/maxexcloo`. ComfyUI Radiance, ComfyUI ROCm and macOS support AMD64; other active
-recipes support AMD64 and ARM64.
+Container images for my own infrastructure, built from pinned upstream
+applications. The active builds are Atvloadly, BetterBench, ComfyUI Radiance,
+ComfyUI ROCm, Gatus/Tailscale and macOS, published under `ghcr.io/maxexcloo`.
+ComfyUI Radiance, ComfyUI ROCm and macOS are AMD64 only; the others support AMD64
+and ARM64.
 
 ## Images
 
@@ -16,16 +17,15 @@ recipes support AMD64 and ARM64.
 | Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                |
 | macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                   |
 
-Each recipe owns a Dockerfile and `source.json` with the upstream repository.
-Recipes built from an upstream release or source specify its reference once; recipes
-that fetch source also pin its commit. Builds receive them as
-`UPSTREAM_REPOSITORY`, `UPSTREAM_REFERENCE` and `UPSTREAM_REVISION`; the reference
-selects matching upstream image tags.
-Recipes reuse upstream images where available
-and fetch source only when needed. This repository keeps packaging, runtime
-support and local `patches/`.
-The generic builder in `.github/scripts/` discovers recipes from `source.json`.
-Deployment repositories own credentials, configuration and persistent data.
+Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
+Recipes built from an upstream release or source set its reference once, and
+recipes that fetch source also pin its commit. Builds get these as
+`UPSTREAM_REPOSITORY`, `UPSTREAM_REFERENCE` and `UPSTREAM_REVISION`, and the
+reference picks the matching upstream image tags. Recipes reuse upstream images
+where they exist and only fetch source when they have to. This repository holds
+the packaging, runtime support and local `patches/`. The generic builder in
+`.github/scripts/` finds recipes from their `source.json`. Credentials,
+configuration and persistent data belong in the deployment repositories.
 
 ## Development
 
@@ -39,8 +39,8 @@ mise install
 mise run check
 ```
 
-Build active images with Docker and Buildx. Builds skip recipes that do not support
-the host architecture:
+Build the active images with Docker and Buildx. Recipes that don't support the
+host architecture are skipped:
 
 ```sh
 mise run build
@@ -52,61 +52,65 @@ Build one image by recipe name:
 mise exec -- python .github/scripts/image.py build atvloadly
 ```
 
-Atvloadly includes pairing completion and discovery refresh patches. Application
-dependencies follow upstream; local patches and overrides address demonstrated
-functional issues. Upstream browser and Go tests run during its build. Deployment
-requires host networking and
-`seccomp=unconfined` for the upstream signing tools.
+Atvloadly includes patches for pairing completion and discovery refresh.
+Application dependencies follow upstream, and local patches and overrides fix
+functional problems that have actually shown up. Upstream browser and Go tests run during the build.
+Deploying it needs host networking and `seccomp=unconfined` for the upstream
+signing tools.
 
 BetterBench has no upstream container image, so its minimal recipe installs the
-upstream application and runs upstream tests; dependency versions can change
-between builds of the same source.
+upstream application and runs its tests. Dependency versions can change between
+builds of the same source.
 
-ComfyUI uses the upstream ROCm base and its Python installation.
-Verify ComfyUI GPU compatibility on the target ROCm host before deploying a new
-image; its base tag floats. Its saved core, models and state remain owned by the deployment.
-ComfyUI Radiance adds Radiance’s runtime and its separate ROCm libraries to the
+ComfyUI uses the upstream ROCm base and its Python installation. Its base tag
+floats, so check GPU compatibility on the target ROCm host before deploying a new
+image. The saved core, models and state belong to the deployment.
+ComfyUI Radiance adds Radiance's runtime and its own ROCm libraries to the
 published ComfyUI ROCm image. Both base images are pinned in its Dockerfile, so it
-rebuilds after Renovate moves either pin.
-Gatus/Tailscale combines binaries from upstream images; deployments supply
+rebuilds when Renovate moves either pin.
+Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration.
 
 The [macOS recipe](macos/README.md) includes a Compose example for Linux and
-TrueNAS Docker Apps. It requires host KVM and GPU access, downloads macOS at
-runtime and keeps installation state outside the image. Reims' native window
-renders into Selkies' GPU-backed desktop; no host desktop or streaming service is
-required.
+TrueNAS Docker Apps. It needs host KVM and GPU access, downloads macOS at runtime
+and keeps installation state outside the image. Reims' native window renders into
+Selkies' GPU-backed desktop, so the host doesn't need a desktop or streaming
+service.
 
 ## Publishing
 
-Pull requests build changed recipes on their configured architectures without publishing.
-Shared pipeline changes rebuild all recipes; metadata-only changes validate configuration
-and skip image builds. Required checks always report.
-Publishing runs on the same branch are serialised. Outdated manual runs on `main`
-skip builds; manual runs of its current revision can rebuild selected images.
-Outdated push runs fail before building so they cannot advance the successful
-publication baseline. A baseline missing from rewritten history rebuilds every recipe.
-Runtime changes and manual runs on `main` publish verified architecture images, then assemble
-multi-architecture manifests. Manual runs accept an `image` recipe name, or `all`.
-Tags include `latest`, `sha-<build-commit>`, the upstream release reference
-(for example `v5.37.0`) for recipes that specify one, and
-`source-<upstream-commit>` for recipes that fetch source. Recipes without a
-reference combine their exact base tags instead, final base first, for example
-`v0.41.0-radiance1.8.1`; Renovate's `loose` versioning orders them. Release tags move when
-packaging changes rebuild the same upstream release. Revision labels record the
-packaging commit; recipes that fetch source record their upstream reference as the
-image version. Published images include provenance and SBOMs.
-Pin deployed images by release or `sha-` tag.
+Pull requests build changed recipes on their configured architectures without
+publishing. Shared pipeline changes rebuild every recipe, while metadata-only
+changes validate the configuration and skip image builds. Required checks always
+report.
 
-The repository needs Write access under each existing GHCR package's
-**Settings → Manage Actions Access**. Publishing uses `GITHUB_TOKEN`.
+Publishing runs on the same branch run one at a time. Outdated manual runs on
+`main` skip their builds, and manual runs of the current revision can rebuild
+selected images. Outdated push runs fail before building so they can't move the
+last successful publication forward. If that baseline has been lost from
+rewritten history, every recipe is rebuilt. Runtime changes and manual runs on
+`main` publish verified per-architecture images, then assemble multi-architecture
+manifests. Manual runs take an `image` recipe name or `all`.
+
+Tags include `latest`, `sha-<build-commit>`, the upstream release reference
+(for example `v5.37.0`) for recipes that set one, and `source-<upstream-commit>`
+for recipes that fetch source. Recipes without a reference combine their exact
+base tags instead, final base first, for example `v0.41.0-radiance1.8.1`, and
+Renovate's `loose` versioning orders them. Release tags move when a packaging
+change rebuilds the same upstream release. Revision labels record the packaging
+commit, and recipes that fetch source record their upstream reference as the
+image version. Published images include provenance and SBOMs. Pin deployed images
+by release or `sha-` tag.
+
+The repository needs Write access under **Settings → Manage Actions Access** for
+each existing GHCR package. Publishing uses `GITHUB_TOKEN`.
 
 ## Dependencies
 
 Renovate (`renovate.json5`) opens pull requests for actions, base images, Python
-packages pinned in Dockerfiles and each `source.json` upstream: release references
-move to the latest GitHub release with its commit, and branch references follow the
-branch's latest commit.
+packages pinned in Dockerfiles and each `source.json` upstream. Release references
+move to the latest GitHub release and its commit, and branch references follow
+the branch's latest commit.
 
 ```sh
 mise run dependencies:check
