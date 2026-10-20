@@ -66,8 +66,8 @@ jobs:
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
-    name: Build ${{ matrix.recipe.image }} (${{ matrix.architecture }})
     if: needs.prepare.outputs.build-required == 'true'
+    name: Build ${{ matrix.recipe.image }} (${{ matrix.architecture }})
     needs: prepare
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     permissions:
@@ -84,8 +84,8 @@ jobs:
           persist-credentials: false
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v4
-      - name: Log In to GHCR
-        if: needs.prepare.outputs.publish-enabled == 'true'
+      - if: needs.prepare.outputs.publish-enabled == 'true'
+        name: Log In to GHCR
         uses: docker/login-action@v4
         with:
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -95,34 +95,34 @@ jobs:
         name: Build & Verify Image
         uses: docker/build-push-action@v7
         with:
-          build-args: |
-            UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
-            UPSTREAM_REPOSITORY=${{ matrix.recipe.repository }}
-            UPSTREAM_REVISION=${{ matrix.recipe.revision }}
           build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
           cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
-          labels: |
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
-            ${{ (matrix.recipe.reference || matrix.recipe.version) && format('org.opencontainers.image.version={0}', matrix.recipe.reference || matrix.recipe.version) || '' }}
           platforms: linux/${{ matrix.architecture }}
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
           push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           sbom: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || '' }}
-      - name: Record Digest
-        if: needs.prepare.outputs.publish-enabled == 'true'
+          build-args: |
+            UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
+            UPSTREAM_REPOSITORY=${{ matrix.recipe.repository }}
+            UPSTREAM_REVISION=${{ matrix.recipe.revision }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
+            ${{ (matrix.recipe.reference || matrix.recipe.version) && format('org.opencontainers.image.version={0}', matrix.recipe.reference || matrix.recipe.version) || '' }}
+      - if: needs.prepare.outputs.publish-enabled == 'true'
+        name: Record Digest
         env:
           ARCHITECTURE: ${{ matrix.architecture }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           mkdir -p digests
           printf '%s\n' "$IMAGE_DIGEST" > "digests/$ARCHITECTURE"
-      - name: Upload Digest
-        if: needs.prepare.outputs.publish-enabled == 'true'
+      - if: needs.prepare.outputs.publish-enabled == 'true'
+        name: Upload Digest
         uses: actions/upload-artifact@v7
         with:
           name: digests-${{ matrix.recipe.image }}-${{ matrix.architecture }}
@@ -130,10 +130,10 @@ jobs:
           retention-days: 1
 
   publish:
-    name: Publish ${{ matrix.recipe.image }}
     if: needs.prepare.outputs.publish-enabled == 'true' && needs.prepare.outputs.build-required == 'true'
-    needs: [prepare, build]
+    name: Publish ${{ matrix.recipe.image }}
     runs-on: ubuntu-latest
+    needs: [prepare, build]
     permissions:
       packages: write
     strategy:
@@ -181,16 +181,16 @@ jobs:
           docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
 
   check:
-    name: Check
     if: always()
-    needs: [prepare, build, publish]
+    name: Check
     runs-on: ubuntu-latest
+    needs: [prepare, build, publish]
     steps:
       - name: Verify Build & Publishing Results
+        run: test "$SUCCESS" = true
         env:
           SUCCESS: >-
             ${{ needs.prepare.result == 'success' &&
                 (needs.prepare.outputs.build-required == 'true' || needs.prepare.outputs.build-required == 'false') &&
                 needs.build.result == (needs.prepare.outputs.build-required == 'true' && 'success' || 'skipped') &&
                 needs.publish.result == (needs.prepare.outputs.build-required == 'true' && needs.prepare.outputs.publish-enabled == 'true' && 'success' || 'skipped') }}
-        run: test "$SUCCESS" = true
