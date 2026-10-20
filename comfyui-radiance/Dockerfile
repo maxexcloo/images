@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/stilldeadcode/radiance:1.8.1 AS radiance
+FROM docker.io/stilldeadcode/radiance:1.9.0 AS radiance
 FROM ghcr.io/maxexcloo/comfyui-rocm:v0.41.0
 
 COPY --from=radiance /opt/radiance /opt/radiance
