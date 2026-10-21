@@ -103,8 +103,6 @@ jobs:
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
           push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           sbom: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
-          secrets: |
-            ${{ matrix.recipe.private && format('GIT_AUTH_TOKEN={0}', secrets.PUSH_TOKEN) || '' }}
           tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || '' }}
           build-args: |
             UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
