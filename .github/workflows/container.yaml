@@ -97,12 +97,14 @@ jobs:
         with:
           build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
-          cache-to: ${{ matrix.recipe.image != 'comfyui-rocm' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
+          cache-to: ${{ matrix.recipe.image != 'comfyui-radiance' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
           platforms: linux/${{ matrix.architecture }}
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
           push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           sbom: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
+          secrets: |
+            ${{ matrix.recipe.private && format('GIT_AUTH_TOKEN={0}', secrets.PUSH_TOKEN) || '' }}
           tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || '' }}
           build-args: |
             UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
