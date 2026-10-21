@@ -13,7 +13,7 @@ import sys
 import threading
 import uuid
 
-from .backend import LORA_TAG, available_models, lora_tags, worker
+from .backend import HOST, LORA_TAG, PORT, available_models, lora_tags, worker
 from .video import RadianceVideoGenerate
 
 NEGATIVE_OPTIONAL = ("flux-3-", "krea-2-")
@@ -109,7 +109,7 @@ def image_request(values, references=None):
 
 def call_radiance(route, body, content_type, check_interrupt):
     """Interrupting the Comfy job closes only its own HTTP generation request."""
-    connection = http.client.HTTPConnection("127.0.0.1", 8000, timeout=600)
+    connection = http.client.HTTPConnection(HOST, PORT, timeout=600)
     result = queue.Queue(maxsize=1)
 
     def request():
@@ -197,7 +197,7 @@ class RadianceImageGenerate:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "generate"
-    CATEGORY = "AI/Radiance"
+    CATEGORY = "Radiance"
 
     def generate(self, reference_image=None, **values):
         import comfy.model_management

@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from custom_nodes.ai_radiance.backend import Worker, stop_worker, video_command
-from custom_nodes.ai_radiance.video import (
+from custom_nodes.radiance.backend import Worker, stop_worker, video_command
+from custom_nodes.radiance.video import (
     canvas,
     frame_count,
     generate_video,
@@ -169,7 +169,7 @@ class VideoRequestTests(unittest.TestCase):
         worker = Worker(video_command, "video", 900)
         with (
             patch.dict("os.environ", HIP_VISIBLE_DEVICES="1"),
-            patch("custom_nodes.ai_radiance.backend.subprocess.Popen") as spawn,
+            patch("custom_nodes.radiance.backend.subprocess.Popen") as spawn,
             self.assertRaisesRegex(ValueError, "both GPUs"),
             worker.use(STOCK, lambda: None),
         ):
@@ -178,8 +178,8 @@ class VideoRequestTests(unittest.TestCase):
 
     def test_video_and_image_workers_are_released_together(self):
         with (
-            patch("custom_nodes.ai_radiance.backend._worker") as image,
-            patch("custom_nodes.ai_radiance.backend._video_worker") as video,
+            patch("custom_nodes.radiance.backend._worker") as image,
+            patch("custom_nodes.radiance.backend._video_worker") as video,
         ):
             stop_worker()
         image.stop.assert_called_once()

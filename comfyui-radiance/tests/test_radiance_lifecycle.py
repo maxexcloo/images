@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-from custom_nodes.ai_radiance.lifecycle import install_hooks
+from custom_nodes.radiance.lifecycle import install_hooks
 
 
 class LifecycleTests(unittest.IsolatedAsyncioTestCase):
@@ -20,7 +20,7 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
         )
         management = SimpleNamespace(unload_all_models=Mock())
         with patch(
-            "custom_nodes.ai_radiance.lifecycle.stop_worker",
+            "custom_nodes.radiance.lifecycle.stop_worker",
             side_effect=lambda: events.append("stop"),
         ):
             install_hooks(execution, management)
@@ -72,7 +72,7 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
         )
         prompt = Mock()
         prompt.get_node.return_value = {"class_type": "SaveImage"}
-        with patch("custom_nodes.ai_radiance.lifecycle.stop_worker") as stop:
+        with patch("custom_nodes.radiance.lifecycle.stop_worker") as stop:
             install_hooks(execution, SimpleNamespace(unload_all_models=Mock()))
             await execution.execute(None, prompt, None, "1")
         stop.assert_called_once()

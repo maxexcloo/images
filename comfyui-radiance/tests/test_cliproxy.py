@@ -7,10 +7,11 @@ import json
 import os
 import sys
 import tempfile
+import threading
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from PIL import Image
 
@@ -19,6 +20,16 @@ sys.modules.setdefault("folder_paths", types.SimpleNamespace())
 spec = importlib.util.spec_from_file_location("cliproxy_node", NODE)
 node = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(node)
+
+MODELS = {
+    "image": (
+        "grok-imagine-image",
+        "grok-imagine-image-2.0",
+        "grok-imagine-image-quality",
+    ),
+    "video": ("grok-imagine-video", "grok-imagine-video-1.5"),
+}
+discover_models = node.available_models
 
 
 class ProviderTests(unittest.TestCase):
@@ -29,6 +40,22 @@ class ProviderTests(unittest.TestCase):
         )
         self.env.start()
         self.addCleanup(self.env.stop)
+        defaults = patch.dict(
+            os.environ,
+            CLIPROXYAPI_IMAGE_MODEL="grok-imagine-image-quality",
+            CLIPROXYAPI_VIDEO_MODEL="grok-imagine-video-1.5",
+        )
+        defaults.start()
+        self.addCleanup(defaults.stop)
+        models = patch.object(node, "available_models", return_value=MODELS)
+        models.start()
+        self.addCleanup(models.stop)
+        cancellation = patch.object(node, "check_cancelled")
+        cancellation.start()
+        self.addCleanup(cancellation.stop)
+        cache = patch.object(node, "_model_cache", None)
+        cache.start()
+        self.addCleanup(cache.stop)
 
     def test_image_and_edit_contracts(self):
         proxy = node.Proxy()
@@ -112,7 +139,7 @@ class ProviderTests(unittest.TestCase):
 
     def test_image_variants_route_to_the_exact_model(self):
         proxy = node.Proxy()
-        for model in node.MODELS["image"]:
+        for model in MODELS["image"]:
             with (
                 self.subTest(model=model),
                 patch.object(
@@ -167,7 +194,7 @@ class ProviderTests(unittest.TestCase):
 
     def test_video_variants_route_to_the_exact_model(self):
         proxy = node.Proxy()
-        for model in node.MODELS["video"]:
+        for model in MODELS["video"]:
             with (
                 self.subTest(model=model),
                 patch.object(
@@ -208,7 +235,7 @@ class ProviderTests(unittest.TestCase):
     def test_explicit_node_models_reach_provider_and_output_metadata(self):
         image = io.BytesIO()
         Image.new("RGB", (16, 16)).save(image, format="PNG")
-        for kind, models in node.MODELS.items():
+        for kind, models in MODELS.items():
             for model in models:
                 with (
                     self.subTest(model=model),
@@ -249,7 +276,7 @@ class ProviderTests(unittest.TestCase):
                         with Image.open(output) as saved:
                             self.assertIn(f"Model: {model}", saved.info["parameters"])
 
-    def test_optional_model_input_advertises_the_six_explicit_ids(self):
+    def test_model_input_uses_discovery_and_omits_the_unused_seed(self):
         with (
             tempfile.TemporaryDirectory() as directory,
             patch.object(
@@ -262,8 +289,9 @@ class ProviderTests(unittest.TestCase):
             schema = node.GrokMedia.INPUT_TYPES()
         self.assertEqual(
             schema["optional"]["model"][0],
-            [""] + list(node.MODELS["image"]) + list(node.MODELS["video"]),
+            [""] + list(MODELS["image"]) + list(MODELS["video"]),
         )
+        self.assertNotIn("seed", schema["required"])
 
     def test_explicit_duration_and_resolution_reach_video_provider(self):
         proxy = node.Proxy()
@@ -391,6 +419,155 @@ class ProviderTests(unittest.TestCase):
             self.assertEqual(opened.call_args.args, ("https://media.example/result",))
         with self.assertRaises(ValueError):
             node.download("file:///etc/passwd")
+
+    def test_discovery_accepts_new_variants_and_filters_other_protocols(self):
+        names = [
+            "grok-imagine-image-next",
+            "grok-imagine-video-next",
+            "chat-model",
+            "grok-imagine-image",
+            "grok-imagine-image-next",
+        ]
+        with (
+            patch.object(node, "available_models", discover_models),
+            patch.dict(os.environ, CLIPROXYAPI_IMAGE_MODEL=""),
+            patch.object(
+                node.Proxy,
+                "call",
+                return_value={"data": [{"id": name} for name in names]},
+            ) as call,
+        ):
+            models = node.available_models()
+            self.assertEqual(
+                models["image"], ("grok-imagine-image", "grok-imagine-image-next")
+            )
+            self.assertEqual(models["video"], ("grok-imagine-video-next",))
+            self.assertEqual(node.media_model("image"), "grok-imagine-image")
+            call.assert_called_once_with("/v1/models", timeout=5)
+
+    def test_model_cache_expires(self):
+        with (
+            patch.object(node.Proxy, "call", return_value={"data": []}) as call,
+            patch.object(node.time, "monotonic", return_value=0) as clock,
+        ):
+            discover_models()
+            discover_models()
+            self.assertEqual(call.call_count, 1)
+            clock.return_value = 61
+            discover_models()
+            self.assertEqual(call.call_count, 2)
+
+    def test_discovery_failure_has_no_static_model_fallback(self):
+        with (
+            patch.object(node, "available_models", discover_models),
+            patch.object(
+                node.Proxy, "call", side_effect=RuntimeError("provider offline")
+            ),
+            self.assertRaisesRegex(RuntimeError, "provider offline"),
+        ):
+            node.media_model("image")
+
+    def test_configured_default_must_be_advertised(self):
+        with (
+            patch.dict(
+                os.environ, CLIPROXYAPI_IMAGE_MODEL="grok-imagine-image-missing"
+            ),
+            self.assertRaisesRegex(ValueError, "advertised"),
+        ):
+            node.media_model("image")
+
+    def test_provider_outage_does_not_break_the_node_schema(self):
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(
+                node.folder_paths,
+                "get_input_directory",
+                return_value=directory,
+                create=True,
+            ),
+            patch.object(
+                node, "available_models", side_effect=RuntimeError("provider offline")
+            ),
+        ):
+            schema = node.GrokMedia.INPUT_TYPES()
+        self.assertEqual(schema["optional"]["model"][0], [""])
+
+    def test_new_advertised_models_use_provider_resolution_defaults(self):
+        model = "grok-imagine-image-next"
+        with (
+            patch.object(
+                node, "available_models", return_value={"image": (model,), "video": ()}
+            ),
+            patch.object(
+                node.Proxy,
+                "call",
+                return_value={
+                    "data": [{"b64_json": base64.b64encode(b"image").decode()}]
+                },
+            ) as call,
+        ):
+            proxy = node.Proxy()
+            proxy.image("draw", "1024x1024", model=model)
+            self.assertNotIn("resolution", call.call_args.args[1])
+            proxy.image("draw", "1024x1024", model=model, resolution="4k")
+            self.assertEqual(call.call_args.args[1]["resolution"], "4k")
+
+    def test_poll_cancellation_does_not_resubmit_or_download(self):
+        proxy = node.Proxy()
+        interrupt = Mock(side_effect=[None, RuntimeError("cancelled")])
+        with (
+            patch.object(
+                proxy,
+                "call",
+                side_effect=[{"request_id": "job"}, {"status": "pending"}],
+            ) as call,
+            patch.object(node, "download") as download,
+            self.assertRaisesRegex(RuntimeError, "cancelled"),
+        ):
+            proxy.video("move", 1280, 720, 6, check_interrupt=interrupt)
+        self.assertEqual(
+            [item.args[0] for item in call.call_args_list],
+            ["/v1/videos/generations", "/v1/videos/job"],
+        )
+        download.assert_not_called()
+
+    def test_cancelling_an_image_batch_stops_before_the_next_output(self):
+        with (
+            patch.object(
+                node, "check_cancelled", side_effect=[None, RuntimeError("cancelled")]
+            ),
+            patch.object(
+                node.GrokMedia, "_generate_one", return_value={"ui": {"images": [{}]}}
+            ) as generate,
+            self.assertRaisesRegex(RuntimeError, "cancelled"),
+        ):
+            node.GrokMedia().generate("image", "draw", 1024, 1024, 6, count=3)
+        generate.assert_called_once()
+
+    def test_in_flight_wait_can_be_cancelled(self):
+        started, release = threading.Event(), threading.Event()
+
+        def operation():
+            started.set()
+            release.wait(5)
+            return b"late result"
+
+        def interrupt():
+            if started.is_set():
+                raise RuntimeError("cancelled")
+
+        try:
+            with self.assertRaisesRegex(RuntimeError, "cancelled"):
+                node.interruptible(operation, interrupt)
+        finally:
+            release.set()
+
+    def test_cancellation_before_dispatch_never_calls_the_provider(self):
+        operation = Mock()
+        interrupt = Mock(side_effect=RuntimeError("cancelled"))
+        with self.assertRaisesRegex(RuntimeError, "cancelled"):
+            node.interruptible(operation, interrupt)
+        operation.assert_not_called()
 
 
 if __name__ == "__main__":

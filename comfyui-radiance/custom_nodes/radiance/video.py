@@ -8,7 +8,7 @@ import math
 import time
 from fractions import Fraction
 
-from .backend import LORA_TAG, available_video_models, lora_tags
+from .backend import HOST, LORA_TAG, PORT, available_video_models, lora_tags
 
 FPS = 24
 # H3 lengths are 17n + 5 frames. Radiance renders 5.17 to 14.4 seconds (124 to 345 frames).
@@ -116,7 +116,7 @@ def error_message(data, fallback):
 class Client:
     """Short loopback requests so cancellation is observed between polls."""
 
-    def __init__(self, host="127.0.0.1", port=8000, timeout=30):
+    def __init__(self, host=HOST, port=PORT, timeout=30):
         self.host, self.port, self.timeout = host, port, timeout
 
     def request(self, method, route, body=None, raw=False, timeout=None):
@@ -263,7 +263,7 @@ class RadianceVideoGenerate:
     RETURN_TYPES = ("VIDEO", "AUDIO")
     RETURN_NAMES = ("video", "audio")
     FUNCTION = "generate"
-    CATEGORY = "AI/Radiance"
+    CATEGORY = "Radiance"
 
     def generate(self, **values):
         import comfy.model_management
