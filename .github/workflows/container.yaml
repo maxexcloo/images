@@ -104,7 +104,7 @@ jobs:
           push: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           sbom: ${{ needs.prepare.outputs.publish-enabled == 'true' }}
           secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.PUSH_TOKEN || github.token }}
+            ${{ matrix.recipe.private && format('GIT_AUTH_TOKEN={0}', secrets.PUSH_TOKEN) || '' }}
           tags: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('ghcr.io/maxexcloo/{0}:sha-{1}-{2}', matrix.recipe.image, github.sha, matrix.architecture) || '' }}
           build-args: |
             UPSTREAM_REFERENCE=${{ matrix.recipe.reference }}
