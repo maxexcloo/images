@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie AS build
+ARG SELKIES_IMAGE=ghcr.io/selkies-project/selkies/base:2.1.0-debiantrixie
+FROM ${SELKIES_IMAGE} AS build
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG UPSTREAM_REPOSITORY
@@ -42,7 +43,7 @@ RUN ldd /out/usr/lib/reims/bin/reims-* /out/usr/lib/reims/qemu/bin/qemu-* \
     | awk '/=> \// { print $3 }' | xargs realpath | sort -u \
     | xargs dpkg-query --search | cut -d: -f1 | sort -u > /out/runtime-packages
 
-FROM ghcr.io/selkies-project/selkies/base:latest-debiantrixie
+FROM ${SELKIES_IMAGE}
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive

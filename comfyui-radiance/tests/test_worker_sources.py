@@ -15,12 +15,16 @@ class WorkerSourcesTests(unittest.TestCase):
             with self.subTest(path=source["path"]):
                 self.assertRegex(source["revision"], r"^[0-9a-f]{40}$")
                 self.assertTrue(source["url"].startswith("https://github.com/"))
+                self.assertEqual(Path(source["path"]).parent, Path("custom_nodes"))
         paths = [source["path"] for source in sources]
         self.assertEqual(len(paths), len(set(paths)))
-        self.assertEqual(paths.count("comfyui/upstream/ComfyUI"), 1)
 
-    def test_worker_build_has_no_private_source_context(self):
+    def test_core_uses_pinned_upstream_context(self):
         source = json.loads((ROOT / "source.json").read_text())
         self.assertFalse(source.get("private", False))
-        self.assertNotIn("revision", source)
-        self.assertNotIn("--from=upstream", (ROOT / "Dockerfile").read_text())
+        self.assertEqual(source["repository"], "Comfy-Org/ComfyUI")
+        self.assertRegex(source["reference"], r"^v\d+\.\d+\.\d+$")
+        self.assertRegex(source["revision"], r"^[0-9a-f]{40}$")
+        self.assertIn(
+            "COPY --from=upstream / /root/ComfyUI/", (ROOT / "Dockerfile").read_text()
+        )

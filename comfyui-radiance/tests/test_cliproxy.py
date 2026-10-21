@@ -14,8 +14,7 @@ from unittest.mock import patch
 
 from PIL import Image
 
-NODE = Path(__file__).resolve().parents[1] / "comfyui/custom_nodes/cliproxy/__init__.py"
-ROOT = NODE.parents[3]
+NODE = Path(__file__).resolve().parents[1] / "custom_nodes/cliproxy/__init__.py"
 sys.modules.setdefault("folder_paths", types.SimpleNamespace())
 spec = importlib.util.spec_from_file_location("cliproxy_node", NODE)
 node = importlib.util.module_from_spec(spec)

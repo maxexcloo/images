@@ -89,7 +89,9 @@ class MatrixTests(unittest.TestCase):
             recipe["image"]: recipe["version"] for recipe in matrix()["include"]
         }
         self.assertEqual(versions["ai-control"], "1.0.2")
-        self.assertEqual(versions["comfyui-radiance"], "1.0.2")
+        self.assertEqual(
+            versions["comfyui-radiance"], image.source("comfyui-radiance")["reference"]
+        )
 
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:

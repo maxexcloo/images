@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ENTRYPOINT = Path(__file__).resolve().parents[1] / "comfyui/entrypoint.sh"
+ENTRYPOINT = Path(__file__).resolve().parents[1] / "entrypoint.sh"
 
 
 class WorkerEntrypointTests(unittest.TestCase):

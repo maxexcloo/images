@@ -12,18 +12,8 @@ from pathlib import Path
 def install(source, target):
     target = Path(target)
     sources = json.loads(Path(source).read_text())
-    core = next(item for item in sources if item["path"] == "comfyui/upstream/ComfyUI")
-    subprocess.run(
-        ["git", "-C", str(target), "fetch", "--depth", "1", "origin", core["revision"]],
-        check=True,
-    )
-    subprocess.run(
-        ["git", "-C", str(target), "checkout", "--detach", core["revision"]], check=True
-    )
     for item in sources:
-        if not item["path"].startswith("comfyui/custom_nodes/"):
-            continue
-        destination = target / "custom_nodes" / Path(item["path"]).name
+        destination = target / item["path"]
         subprocess.run(
             [
                 "git",
