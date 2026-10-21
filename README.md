@@ -120,7 +120,12 @@ mise run dependencies:update
 
 The shared image/video worker (`comfyui-radiance`) builds from its local recipe
 context. Its core release and commit are owned by `comfyui-radiance/source.json`;
-that release also supplies the published version tag and ComfyUI version label.
+the reference supplies the published version tag and ComfyUI version label.
+The current v0.42.0 reference pins a feature commit with native Fibo 2 support,
+not the v0.42.0 release tag. Renovate release updates for ComfyUI are held because
+the existing stable releases lack those nodes and the Fibo 2 encoder type. The
+worker maintainer should remove the hold after pinning a stable release with
+that support and verifying both generation and editing on Bento.
 Worker extensions are pinned in `comfyui-radiance/sources.json`; its
 CPU tests run with `mise run test:worker`. Local nodes share `custom_nodes/`,
 and all worker tests live in `tests/` within the recipe; tests are excluded from
