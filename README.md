@@ -1,7 +1,7 @@
 # Images
 
 Container images for my own infrastructure, built from pinned upstream
-applications. The active builds are AI Control, Atvloadly, BetterBench, ComfyUI Radiance,
+applications. The active builds are Atvloadly, BetterBench, ComfyUI Radiance,
 Gatus/Tailscale, macOS and Redlib, published under `ghcr.io/maxexcloo`.
 ComfyUI Radiance and macOS are AMD64 only; the others support AMD64
 and ARM64.
@@ -10,7 +10,6 @@ and ARM64.
 
 | Image            | Upstream                                                          | Runtime                                                                                                                                                              |
 | ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AI Control       | [maxexcloo/ai-control](https://github.com/maxexcloo/ai-control)   | Standalone GPU allocation web app; mount workload/access configuration and SSH settings                                                                              |
 | Atvloadly        | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                                                             |
 | BetterBench      | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                                                      |
 | ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | Complete ComfyUI worker with [Radiance](https://codeberg.org/StillDeadcode/radiance), pinned extensions and the matching Studio node; mount models and runtime state |
@@ -129,7 +128,6 @@ the Docker build context. The image includes its pinned Studio
 node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
 provide models, scratch mounts and environment settings.
 
-AI Control (`ai-control`) builds from an exact revision of the private
-`maxexcloo/ai-control` app repository. Private source contexts use BuildKit's Git authentication secret;
-CI supplies the existing `PUSH_TOKEN`, while local builds use `GIT_AUTH_TOKEN`
-or the signed-in GitHub CLI. Tokens are never build arguments or image layers.
+[AI Control](https://github.com/maxexcloo/ai-control) owns its Docker image and
+publishing workflow in its app repository. It continues to publish
+`ghcr.io/maxexcloo/ai-control` independently of this repository.
