@@ -8,8 +8,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from patch_minimax import AFTER, BEFORE, LEGACY_AFTER, LEGACY_BEFORE
-from patch_minimax import patch as patch_core
+from patches.patch_minimax import AFTER, BEFORE, LEGACY_AFTER, LEGACY_BEFORE
+from patches.patch_minimax import patch as patch_core
 
 
 class ShapeImage:
@@ -43,7 +43,7 @@ class MiniMaxGeometryTests(unittest.TestCase):
         ).encode()
         self.target.write_bytes(self.original)
         self.digest = patch(
-            "patch_minimax.UPSTREAM_SHA256",
+            "patches.patch_minimax.UPSTREAM_SHA256",
             hashlib.sha256(self.original).hexdigest(),
         )
         self.digest.start()
