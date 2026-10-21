@@ -119,4 +119,13 @@ mise run dependencies:check
 mise run dependencies:update
 ```
 
-AI Control (`ai-control`) and the shared image/video worker (`comfyui-radiance`) build from exact revisions of the private AI repository. Private source contexts use BuildKit's Git authentication secret; CI supplies the existing `PUSH_TOKEN`, while local builds use `GIT_AUTH_TOKEN` or the signed-in GitHub CLI. Tokens are never build arguments or image layers. The worker includes its pinned Studio node, Radiance runtime, custom nodes and Python dependencies; deployment hosts provide only models, scratch mounts and environment settings.
+The shared image/video worker (`comfyui-radiance`) builds from its local recipe
+context. Worker extensions are pinned in `comfyui-radiance/sources.json`; its
+CPU tests run with `mise run test:worker`. The image includes its pinned Studio
+node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
+provide models, scratch mounts and environment settings.
+
+AI Control (`ai-control`) still builds from an exact revision of the private AI
+repository. Private source contexts use BuildKit's Git authentication secret;
+CI supplies the existing `PUSH_TOKEN`, while local builds use `GIT_AUTH_TOKEN`
+or the signed-in GitHub CLI. Tokens are never build arguments or image layers.
