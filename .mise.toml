@@ -13,7 +13,13 @@ depends = [
   "check:updates",
   "check:whitespace",
   "test:python",
+  "test:worker",
 ]
 
 [tasks.fmt]
 depends = ["fmt:mise", "fmt:oxfmt", "fmt:python"]
+
+[tasks."test:worker"]
+description = "Test ComfyUI & Radiance Worker Code Without A GPU"
+dir = "{{config_root}}/comfyui-radiance"
+run = "uv run --no-project --with 'pillow>=13.0.0' python -B -m unittest discover -s tests"
