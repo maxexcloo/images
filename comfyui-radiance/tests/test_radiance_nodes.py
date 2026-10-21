@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from radiance_image.nodes import image_request
+from custom_nodes.ai_radiance import image_request
 
 
 class ImageRequestTests(unittest.TestCase):

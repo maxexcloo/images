@@ -63,20 +63,20 @@ BetterBench has no upstream container image, so its minimal recipe installs the
 upstream application and runs its tests. Dependency versions can change between
 builds of the same source.
 
-ComfyUI uses the upstream ROCm base and its Python installation. Its base tag
-floats, so check GPU compatibility on the target ROCm host before deploying a new
-image. The pinned core, extensions and Python dependencies are packaged in
-ComfyUI Radiance; deployments supply models and persistent state. Radiance has its
-own runtime libraries inside the same worker image.
+ComfyUI uses a dated upstream ROCm base and its Python installation. Check GPU
+compatibility on the target ROCm host before deploying a new base version. The
+pinned core, extensions and Python dependencies are packaged in ComfyUI Radiance;
+deployments supply models and persistent state. Radiance has its own runtime
+libraries inside the same worker image.
 Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration. Redlib builds the pinned fork from source
 and runs its offline Rust tests during the build; deployments supply its configuration.
 
 The [macOS recipe](macos/README.md) includes a Compose example for Linux and
 TrueNAS Docker Apps. It needs host KVM and GPU access, downloads macOS at runtime
-and keeps installation state outside the image. Reims' native window renders into
-Selkies' GPU-backed desktop, so the host doesn't need a desktop or streaming
-service.
+and keeps installation state outside the image. Both build stages share one
+versioned Selkies base pin. Reims' native window renders into Selkies' GPU-backed
+desktop, so the host doesn't need a desktop or streaming service.
 
 ## Publishing
 
@@ -120,8 +120,12 @@ mise run dependencies:update
 ```
 
 The shared image/video worker (`comfyui-radiance`) builds from its local recipe
-context. Worker extensions are pinned in `comfyui-radiance/sources.json`; its
-CPU tests run with `mise run test:worker`. The image includes its pinned Studio
+context. Its core release and commit are owned by `comfyui-radiance/source.json`;
+that release also supplies the published version tag and ComfyUI version label.
+Worker extensions are pinned in `comfyui-radiance/sources.json`; its
+CPU tests run with `mise run test:worker`. Local nodes share `custom_nodes/`,
+and all worker tests live in `tests/` within the recipe; tests are excluded from
+the Docker build context. The image includes its pinned Studio
 node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
 provide models, scratch mounts and environment settings.
 

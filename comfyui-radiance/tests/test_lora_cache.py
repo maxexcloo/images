@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import Mock
 
-ROOT = Path(__file__).resolve().parents[1] / "comfyui/custom_nodes/ai_lora_cache"
+ROOT = Path(__file__).resolve().parents[1] / "custom_nodes/ai_lora_cache"
 
 
 def module(name):

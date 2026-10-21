@@ -39,4 +39,12 @@
       matchStrings: ["\\b(?<depName>[\\w.-]+)==(?<currentValue>\\d[\\w.+!-]*)"],
     },
   ],
+  packageRules: [
+    {
+      description: "Keep dated ROCm builds on the existing channel",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/(^|/)yanwk/comfyui-boot$/"],
+      versioning: "regex:^rocm-(?<major>\\d{4})(?<minor>\\d{2})(?<patch>\\d{2})$",
+    },
+  ],
 }
