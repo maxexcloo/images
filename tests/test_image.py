@@ -84,12 +84,12 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(versions["betterbench"], "")
         self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
 
-    def test_private_workloads_have_exact_source_versions(self):
+    def test_ai_workloads_have_exact_source_versions(self):
         versions = {
             recipe["image"]: recipe["version"] for recipe in matrix()["include"]
         }
         self.assertEqual(versions["ai-control"], "1.0.1")
-        self.assertEqual(versions["comfyui-radiance"], "1.0.1")
+        self.assertEqual(versions["comfyui-radiance"], "1.0.2")
 
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:
