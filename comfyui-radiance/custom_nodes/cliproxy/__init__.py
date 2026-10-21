@@ -43,7 +43,7 @@ def available_models():
                 return models
         result = proxy.call("/v1/models", timeout=5)
         if not isinstance(result, dict) or not isinstance(result.get("data"), list):
-            raise RuntimeError("CLIProxyAPI returned an invalid model catalogue.")
+            raise TypeError("CLIProxyAPI returned an invalid model catalogue.")
         identifiers = {
             item["id"]
             for item in result["data"]
@@ -106,7 +106,8 @@ def interruptible(operation, check_interrupt=None):
     def run():
         try:
             result.put((True, operation()))
-        except BaseException as exc:
+        except BaseException as exc:  # noqa: BLE001
+            # Relay every background-thread failure to the waiting caller.
             result.put((False, exc))
 
     threading.Thread(target=run, daemon=True).start()
@@ -347,7 +348,7 @@ class GrokMedia:
         )
         try:
             models = available_models()
-        except (OSError, RuntimeError, ValueError):
+        except (OSError, RuntimeError, TypeError, ValueError):
             # Provider outages must not prevent ComfyUI from listing other nodes.
             models = {kind: () for kind in MODEL_PREFIXES}
         return {
