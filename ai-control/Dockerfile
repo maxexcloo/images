@@ -12,6 +12,6 @@ RUN apt-get update && apt-get install --no-install-recommends --yes openssh-clie
 WORKDIR /app
 COPY --from=upstream /control/requirements.txt ./
 RUN pip install --no-cache-dir --require-hashes --requirement requirements.txt
-COPY --from=upstream /control/allocation.py control/server.py control/workloads.py ./control/
+COPY --from=upstream /control/allocation.py /control/server.py ./control/
 COPY --from=ui /ui/dist/ ./control/web/dist/
 CMD ["python", "-m", "control.server"]
