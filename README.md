@@ -1,22 +1,22 @@
 # Images
 
 Container images for my own infrastructure, built from pinned upstream
-applications. The active builds are Atvloadly, BetterBench, ComfyUI Radiance,
-ComfyUI ROCm, Gatus/Tailscale, macOS and Redlib, published under `ghcr.io/maxexcloo`.
-ComfyUI Radiance, ComfyUI ROCm and macOS are AMD64 only; the others support AMD64
+applications. The active builds are AI Control, Atvloadly, BetterBench, ComfyUI Radiance,
+Gatus/Tailscale, macOS and Redlib, published under `ghcr.io/maxexcloo`.
+ComfyUI Radiance and macOS are AMD64 only; the others support AMD64
 and ARM64.
 
 ## Images
 
-| Image            | Upstream                                                          | Runtime                                                                                                                                |
-| ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Atvloadly        | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                               |
-| BetterBench      | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                        |
-| ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | ComfyUI ROCm with the [Radiance](https://codeberg.org/StillDeadcode/radiance) runtime in `/opt/radiance`; deployments supply its nodes |
-| ComfyUI ROCm     | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; deployments own GPU allocation, models and persisted state                                                         |
-| Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                |
-| macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                   |
-| Redlib           | [polak14/redlib](https://github.com/polak14/redlib)               | Non-root Reddit frontend on port 8080; built from source for AMD64 and ARM64                                                           |
+| Image            | Upstream                                                          | Runtime                                                                                                                                                              |
+| ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AI Control       | [maxexcloo/ai](https://github.com/maxexcloo/ai)                   | Standalone GPU allocation web app; mount workload/access configuration and SSH settings                                                                              |
+| Atvloadly        | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                                                             |
+| BetterBench      | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                                                      |
+| ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | Complete ComfyUI worker with [Radiance](https://codeberg.org/StillDeadcode/radiance), pinned extensions and the matching Studio node; mount models and runtime state |
+| Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                                              |
+| macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                                                 |
+| Redlib           | [polak14/redlib](https://github.com/polak14/redlib)               | Non-root Reddit frontend on port 8080; built from source for AMD64 and ARM64                                                                                         |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
@@ -65,10 +65,9 @@ builds of the same source.
 
 ComfyUI uses the upstream ROCm base and its Python installation. Its base tag
 floats, so check GPU compatibility on the target ROCm host before deploying a new
-image. The saved core, models and state belong to the deployment.
-ComfyUI Radiance adds Radiance's runtime and its own ROCm libraries to the
-published ComfyUI ROCm image. Both base images are pinned in its Dockerfile, so it
-rebuilds when Renovate moves either pin.
+image. The pinned core, extensions and Python dependencies are packaged in
+ComfyUI Radiance; deployments supply models and persistent state. Radiance has its
+own runtime libraries inside the same worker image.
 Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration. Redlib builds the pinned fork from source
 and runs its offline Rust tests during the build; deployments supply its configuration.
@@ -82,9 +81,10 @@ service.
 ## Publishing
 
 Pull requests build changed recipes on their configured architectures without
-publishing. Shared pipeline changes rebuild every recipe, while metadata-only
-changes validate the configuration and skip image builds. Required checks always
-report.
+publishing. Only changes inside a recipe's build context select that image. Shared
+pipeline and metadata changes run configuration and unit checks without selecting
+unrelated images. Use a manual run to rebuild selected images or every recipe
+after a shared pipeline change. Required checks always report.
 
 Publishing runs on the same branch run one at a time. Outdated manual runs on
 `main` skip their builds, and manual runs of the current revision can rebuild
@@ -118,3 +118,5 @@ the branch's latest commit.
 mise run dependencies:check
 mise run dependencies:update
 ```
+
+AI Control (`ai-control`) and the shared image/video worker (`comfyui-radiance`) build from exact revisions of the private AI repository. Private source contexts use BuildKit's Git authentication secret; CI supplies the existing `PUSH_TOKEN`, while local builds use `GIT_AUTH_TOKEN` or the signed-in GitHub CLI. Tokens are never build arguments or image layers. The worker includes its pinned Studio node, Radiance runtime, custom nodes and Python dependencies; deployment hosts provide only models, scratch mounts and environment settings.
