@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 import re
 import subprocess
 from pathlib import Path
@@ -20,8 +19,6 @@ def source(name):
     if name not in images():
         raise ValueError(f"Unknown image: {name}")
     data = json.loads((ROOT / name / "source.json").read_text())
-    if not isinstance(data.get("private", False), bool):
-        raise TypeError(f"Invalid private source flag for {name}")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", data["repository"]):
         raise ValueError(f"Invalid upstream repository for {name}")
     # A release reference alone selects upstream image tags; a revision also fetches source.
@@ -177,14 +174,7 @@ def main():
                 ]
             )
         command.extend(["--load", "--tag", f"images-{name}:test", name])
-        environment = os.environ.copy()
-        if data.get("private"):
-            if not environment.get("GIT_AUTH_TOKEN"):
-                environment["GIT_AUTH_TOKEN"] = subprocess.check_output(
-                    ["gh", "auth", "token"], text=True, stderr=subprocess.DEVNULL
-                ).strip()
-            command.extend(["--secret", "id=GIT_AUTH_TOKEN,env=GIT_AUTH_TOKEN"])
-        subprocess.run(command, check=True, cwd=ROOT, env=environment)
+        subprocess.run(command, check=True, cwd=ROOT)
 
 
 if __name__ == "__main__":
