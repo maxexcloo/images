@@ -56,7 +56,7 @@ class MatrixTests(unittest.TestCase):
                 self.assertEqual(matrix(changed_files=[path]), full)
 
     def test_manual_selection_keeps_recipe_architecture_support(self):
-        result = matrix("comfyui-rocm")
+        result = matrix("comfyui-radiance")
         self.assertTrue(result["required"])
         self.assertEqual(
             [build["architecture"] for build in result["build"]], ["amd64"]
@@ -70,13 +70,12 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(versions["betterbench"], "")
         self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
 
-    def test_recipes_without_a_reference_combine_base_tags(self):
+    def test_private_workloads_have_exact_source_versions(self):
         versions = {
             recipe["image"]: recipe["version"] for recipe in matrix()["include"]
         }
-        self.assertRegex(
-            versions["comfyui-radiance"], r"^v\d+\.\d+\.\d+-radiance\d+\.\d+\.\d+$"
-        )
+        self.assertEqual(versions["ai-control"], "1.0.1")
+        self.assertEqual(versions["comfyui-radiance"], "1.0.1")
 
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:
