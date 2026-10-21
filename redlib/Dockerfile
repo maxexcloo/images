@@ -6,7 +6,7 @@ RUN apt-get update \
 WORKDIR /source
 COPY --from=upstream / /source/
 # Upstream integration tests contact Reddit and depend on its current access policy.
-RUN cargo test --release --locked --bin redlib -- \
+RUN cargo test --release --locked --lib -- \
         --skip client::tests --skip oauth::tests --skip subreddit::tests \
         --skip user::tests --skip test_fetching \
     && cargo build --release --locked --bin redlib
