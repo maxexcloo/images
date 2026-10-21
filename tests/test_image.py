@@ -45,15 +45,29 @@ class MatrixTests(unittest.TestCase):
                     {"amd64", "arm64"},
                 )
 
-    def test_shared_pipeline_and_unknown_inputs_require_all_images(self):
-        full = matrix()
+    def test_shared_pipeline_changes_validate_without_rebuilding_images(self):
         for path in [
             ".github/workflows/container.yaml",
             ".github/scripts/image.py",
             "new-build-input",
         ]:
             with self.subTest(path=path):
-                self.assertEqual(matrix(changed_files=[path]), full)
+                self.assertFalse(matrix(changed_files=[path])["required"])
+
+    def test_shared_pipeline_changes_keep_ai_builds_scoped(self):
+        result = matrix(
+            changed_files=[
+                ".github/scripts/image.py",
+                ".github/workflows/container.yaml",
+                "ai-control/Dockerfile",
+                "comfyui-radiance/Dockerfile",
+            ]
+        )
+        self.assertEqual(
+            [recipe["image"] for recipe in result["include"]],
+            ["ai-control", "comfyui-radiance"],
+        )
+        self.assertEqual(len(result["build"]), 3)
 
     def test_manual_selection_keeps_recipe_architecture_support(self):
         result = matrix("comfyui-radiance")

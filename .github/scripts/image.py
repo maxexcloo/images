@@ -74,8 +74,6 @@ def affected_images(names, changed_files):
             continue
         if name in names:
             selected.add(name)
-        else:
-            return set(names)
     return selected
 
 
