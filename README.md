@@ -2,7 +2,7 @@
 
 Container images for my own infrastructure, built from pinned upstream
 applications. The active builds are Atvloadly, BetterBench, ComfyUI Radiance,
-ComfyUI ROCm, Gatus/Tailscale and macOS, published under `ghcr.io/maxexcloo`.
+ComfyUI ROCm, Gatus/Tailscale, macOS and Redlib, published under `ghcr.io/maxexcloo`.
 ComfyUI Radiance, ComfyUI ROCm and macOS are AMD64 only; the others support AMD64
 and ARM64.
 
@@ -16,6 +16,7 @@ and ARM64.
 | ComfyUI ROCm     | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | AMD64 ROCm runtime; deployments own GPU allocation, models and persisted state                                                         |
 | Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                |
 | macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                   |
+| Redlib           | [polak14/redlib](https://github.com/polak14/redlib)               | Non-root Reddit frontend on port 8080; built from source for AMD64 and ARM64                                                           |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
@@ -69,7 +70,8 @@ ComfyUI Radiance adds Radiance's runtime and its own ROCm libraries to the
 published ComfyUI ROCm image. Both base images are pinned in its Dockerfile, so it
 rebuilds when Renovate moves either pin.
 Gatus/Tailscale combines binaries from upstream images, and deployments add the
-startup and monitoring configuration.
+startup and monitoring configuration. Redlib builds the pinned fork from source
+and runs its offline Rust tests during the build; deployments supply its configuration.
 
 The [macOS recipe](macos/README.md) includes a Compose example for Linux and
 TrueNAS Docker Apps. It needs host KVM and GPU access, downloads macOS at runtime
