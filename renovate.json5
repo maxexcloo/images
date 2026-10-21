@@ -41,6 +41,12 @@
   ],
   packageRules: [
     {
+      description: "Hold ComfyUI release updates until a stable release includes the pinned Fibo 2 implementation",
+      matchDatasources: ["github-releases"],
+      matchPackageNames: ["Comfy-Org/ComfyUI"],
+      enabled: false,
+    },
+    {
       description: "Keep dated ROCm builds on the existing channel",
       matchDatasources: ["docker"],
       matchPackageNames: ["/(^|/)yanwk/comfyui-boot$/"],
