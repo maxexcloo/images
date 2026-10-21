@@ -88,7 +88,7 @@ class MatrixTests(unittest.TestCase):
         versions = {
             recipe["image"]: recipe["version"] for recipe in matrix()["include"]
         }
-        self.assertEqual(versions["ai-control"], "1.0.1")
+        self.assertEqual(versions["ai-control"], "1.0.2")
         self.assertEqual(versions["comfyui-radiance"], "1.0.2")
 
     def test_partial_git_pin_fails(self):
