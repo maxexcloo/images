@@ -6,8 +6,6 @@ from unittest.mock import Mock, patch
 
 from custom_nodes.radiance.backend import Worker, stop_worker, video_command
 from custom_nodes.radiance.video import (
-    canvas,
-    frame_count,
     generate_video,
     seconds,
     video_request,
@@ -109,10 +107,6 @@ class VideoRequestTests(unittest.TestCase):
             )
 
     def test_frames_follow_the_h3_grid_and_radiance_duration(self):
-        self.assertEqual(
-            [frame_count(value) for value in [124, 130, 192, 345, 362]],
-            [124, 124, 192, 345, 345],
-        )
         # Radiance rounds seconds up to 17-frame steps, so stay just below the exact frame time.
         self.assertEqual(
             [seconds(value) for value in [124, 192, 345]], ["5.166", "8", "14.375"]
@@ -120,20 +114,24 @@ class VideoRequestTests(unittest.TestCase):
         for frames in range(124, 346, 17):
             value = float(seconds(frames)) * 24
             self.assertTrue(frames - 17 < value <= frames, frames)
-        body, frames = video_request(dict(self.values, frames=362))
-        self.assertEqual((frames, body["seconds"]), (345, "14.375"))
+        for frames in range(124, 346, 17):
+            body, actual = video_request(dict(self.values, frames=frames))
+            self.assertEqual(actual, frames)
+            self.assertEqual(body["seconds"], seconds(frames))
+        for frames in [130, 362]:
+            with self.subTest(frames=frames), self.assertRaises(ValueError):
+                video_request(dict(self.values, frames=frames))
 
-    def test_canvas_stays_within_the_model_area(self):
-        self.assertEqual(canvas(1344, 768), (1344, 768))
-        self.assertEqual(canvas(768, 1344), (768, 1344))
+    def test_canvas_is_preserved_or_rejected_without_resizing(self):
+        for width, height in [(1344, 768), (768, 1344), (992, 992), (512, 512)]:
+            body, _ = video_request(dict(self.values, width=width, height=height))
+            self.assertEqual(body["size"], f"{width}x{height}")
         for width, height in [(1024, 1024), (1568, 672), (2048, 2048)]:
-            fitted = canvas(width, height)
-            self.assertLessEqual(fitted[0] * fitted[1], 1344 * 768)
-            self.assertEqual((fitted[0] % 32, fitted[1] % 32), (0, 0))
-        self.assertEqual(
-            video_request(dict(self.values, width=1024, height=1024))[0]["size"],
-            "992x992",
-        )
+            with (
+                self.subTest(size=(width, height)),
+                self.assertRaisesRegex(ValueError, "pixel area"),
+            ):
+                video_request(dict(self.values, width=width, height=height))
 
     def test_bounds_and_mounted_models(self):
         for change in [

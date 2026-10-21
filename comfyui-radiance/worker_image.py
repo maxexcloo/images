@@ -48,24 +48,27 @@ def install(source, target):
         for name in ["torch", "torchaudio", "torchvision"]:
             constraints.write(f"{name}=={importlib.metadata.version(name)}\n")
         constraints.flush()
-        for requirements in [
+        requirements = [
             target / "requirements.txt",
             *sorted((target / "custom_nodes").glob("*/requirements.txt")),
-        ]:
-            subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--no-cache-dir",
-                    "--constraint",
-                    constraints.name,
-                    "--requirement",
-                    str(requirements),
+        ]
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--no-cache-dir",
+                "--constraint",
+                constraints.name,
+                *[
+                    argument
+                    for path in requirements
+                    for argument in ("--requirement", str(path))
                 ],
-                check=True,
-            )
+            ],
+            check=True,
+        )
 
 
 if __name__ == "__main__":

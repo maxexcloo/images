@@ -13,8 +13,6 @@ from .backend import HOST, LORA_TAG, PORT, available_video_models, lora_tags
 FPS = 24
 # H3 lengths are 17n + 5 frames. Radiance renders 5.17 to 14.4 seconds (124 to 345 frames).
 MIN_FRAMES, MAX_FRAMES, FRAME_STEP, FRAME_OFFSET = 124, 345, 17, 5
-# Studio offers the generic H3 range up to 362 frames; Comfy must accept it before clamping.
-INPUT_MAX_FRAMES = 362
 MAX_AREA = 1344 * 768
 MAX_CONTENT_BYTES = 2 * 1024**3
 TERMINAL_FAILURES = {"failed", "cancelled", "canceled", "expired"}
@@ -22,12 +20,6 @@ TERMINAL_FAILURES = {"failed", "cancelled", "canceled", "expired"}
 
 def distilled(model):
     return "fasth3" in model.lower()
-
-
-def frame_count(frames):
-    """Snap to H3's frame grid and Radiance's supported duration."""
-    snapped = round((frames - FRAME_OFFSET) / FRAME_STEP) * FRAME_STEP + FRAME_OFFSET
-    return max(MIN_FRAMES, min(MAX_FRAMES, snapped))
 
 
 def seconds(frames):
@@ -38,22 +30,12 @@ def seconds(frames):
     return f"{math.floor(exact * 1000) / 1000:.3f}"
 
 
-def canvas(width, height):
-    """Keep the requested aspect within H3's 1344 × 768 pixel area, in multiples of 32."""
-    if width * height <= MAX_AREA:
-        return width, height
-    scale = math.sqrt(MAX_AREA / (width * height))
-    return max(256, math.floor(width * scale / 32) * 32), max(
-        256, math.floor(height * scale / 32) * 32
-    )
-
-
 def video_request(values):
     model = values["model"]
     if model not in available_video_models():
         raise ValueError("Choose an available Radiance video model for this account.")
     for name, minimum, maximum in [
-        ("frames", MIN_FRAMES, INPUT_MAX_FRAMES),
+        ("frames", MIN_FRAMES, MAX_FRAMES),
         ("height", 256, 2048),
         ("latent_upscale", 1, 4),
         ("seed", 0, 2**64 - 1),
@@ -74,8 +56,12 @@ def video_request(values):
         raise ValueError("Latent upscale must be 1 (off), 2 or 4.")
     if not values["prompt"].strip():
         raise ValueError("Enter a video prompt.")
-    width, height = canvas(values["width"], values["height"])
-    frames = frame_count(values["frames"])
+    width, height = values["width"], values["height"]
+    frames = values["frames"]
+    if width * height > MAX_AREA:
+        raise ValueError("Video dimensions exceed Radiance's 1344 × 768 pixel area.")
+    if (frames - FRAME_OFFSET) % FRAME_STEP:
+        raise ValueError("Video frames must follow the 17n + 5 frame grid.")
     # Only the profile's stack chooses LoRAs; tags typed into the prompt are dropped.
     prompt = " ".join(
         [
@@ -248,7 +234,7 @@ class RadianceVideoGenerate:
                     {
                         "default": 192,
                         "min": MIN_FRAMES,
-                        "max": INPUT_MAX_FRAMES,
+                        "max": MAX_FRAMES,
                         "step": FRAME_STEP,
                     },
                 ),
