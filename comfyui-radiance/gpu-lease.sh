@@ -43,6 +43,7 @@ case "$devices" in
 esac
 "$@" &
 runtime_pid=$!
+# shellcheck disable=SC2329 # Invoked by the INT/TERM trap below.
 forward_stop() { kill -TERM "$runtime_pid" 2>/dev/null || :; }
 trap forward_stop INT TERM
 # wait can be interrupted by the signal trap; retain locks until the child exits.
