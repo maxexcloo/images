@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from custom_nodes.ai_radiance.backend import Worker, available_models, command
+from custom_nodes.radiance.backend import Worker, available_models, command
 
 
 class BackendTests(unittest.TestCase):
@@ -45,11 +45,11 @@ class BackendTests(unittest.TestCase):
                     HIP_VISIBLE_DEVICES="1",
                 ),
                 patch(
-                    "custom_nodes.ai_radiance.backend.subprocess.Popen",
+                    "custom_nodes.radiance.backend.subprocess.Popen",
                     return_value=process,
                 ) as spawn,
                 patch(
-                    "custom_nodes.ai_radiance.backend.urllib.request.urlopen",
+                    "custom_nodes.radiance.backend.urllib.request.urlopen",
                     return_value=response,
                 ),
             ):
@@ -86,7 +86,7 @@ class BackendTests(unittest.TestCase):
         process.wait.side_effect = [subprocess.TimeoutExpired("radiance", 20), 0]
         with (
             patch(
-                "custom_nodes.ai_radiance.backend.subprocess.Popen",
+                "custom_nodes.radiance.backend.subprocess.Popen",
                 return_value=process,
             ),
             self.assertRaisesRegex(RuntimeError, "cancelled"),
@@ -105,7 +105,7 @@ class BackendTests(unittest.TestCase):
         process.poll.return_value = 7
         with (
             patch(
-                "custom_nodes.ai_radiance.backend.subprocess.Popen",
+                "custom_nodes.radiance.backend.subprocess.Popen",
                 return_value=process,
             ),
             self.assertRaisesRegex(RuntimeError, "loading"),
@@ -124,11 +124,11 @@ class BackendTests(unittest.TestCase):
         response.__exit__ = Mock(return_value=False)
         with (
             patch(
-                "custom_nodes.ai_radiance.backend.subprocess.Popen",
+                "custom_nodes.radiance.backend.subprocess.Popen",
                 side_effect=[first, second],
             ),
             patch(
-                "custom_nodes.ai_radiance.backend.urllib.request.urlopen",
+                "custom_nodes.radiance.backend.urllib.request.urlopen",
                 return_value=response,
             ),
         ):
@@ -166,9 +166,7 @@ class BackendTests(unittest.TestCase):
         new.poll.return_value = None
         self.worker.process, self.worker.model = old, "allowed.rad"
         with (
-            patch(
-                "custom_nodes.ai_radiance.backend.subprocess.Popen", return_value=new
-            ),
+            patch("custom_nodes.radiance.backend.subprocess.Popen", return_value=new),
             patch.object(self.worker, "ready"),
             self.worker.use("allowed.rad", lambda: None),
         ):

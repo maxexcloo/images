@@ -16,7 +16,7 @@ RETAINING_NODES = {
 
 
 def install_hooks(execution, model_management):
-    if getattr(execution, "_ai_radiance_lifecycle", False):
+    if getattr(execution, "_radiance_lifecycle", False):
         return
     execute = execution.execute
     if list(inspect.signature(execute).parameters)[:4] != [
@@ -56,4 +56,4 @@ def install_hooks(execution, model_management):
 
     execution.execute = execute_node
     model_management.unload_all_models = unload_models
-    execution._ai_radiance_lifecycle = True
+    execution._radiance_lifecycle = True

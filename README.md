@@ -128,6 +128,26 @@ the Docker build context. The image includes its pinned Studio
 node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
 provide models, scratch mounts and environment settings.
 
+The local extensions are `cliproxy` and `radiance`. LoRA loading uses the upstream
+ComfyUI and rgthree nodes. ComfyUI caches the last LoRA per loader instance;
+rgthree's Power LoRA Loader creates fresh instances and may reread weights.
+
+CLIProxyAPI discovers advertised Grok image and video models from `/v1/models`,
+cached for one minute. Set `CLIPROXYAPI_URL` and `CLIPROXYAPI_KEY` in the deployment.
+Optional `CLIPROXYAPI_IMAGE_MODEL` and `CLIPROXYAPI_VIDEO_MODEL` select defaults;
+otherwise the first advertised model of each kind is selected alphabetically.
+Defaults must be advertised by that provider. Known request formats and limits
+remain explicit because discovery does not publish their complete schemas. New
+advertised variants use the standard endpoint format and provider resolution
+defaults; an explicit resolution is passed through for the provider to validate.
+Refresh the node's model list after provider changes. Discovery failure leaves
+an empty selector and generation reports the provider error.
+
+Cancelling a CLIProxyAPI job stops local waiting and discards late responses.
+The provider may still finish or bill a submitted job; cancellation never
+resubmits it. The unused seed control is removed, while saved API workflows may
+still send it. Radiance workers share a single loopback endpoint definition.
+
 [AI Control](https://github.com/maxexcloo/ai-control) owns its Docker image and
 publishing workflow in its app repository. It continues to publish
 `ghcr.io/maxexcloo/ai-control` independently of this repository.

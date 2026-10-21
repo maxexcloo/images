@@ -24,8 +24,7 @@ COPY patches/ /opt/ai/patches/
 COPY entrypoint.sh /opt/ai/comfyui-entrypoint.sh
 COPY gpu-lease.sh /opt/ai/gpu-lease.sh
 RUN python3 /opt/ai/patches/patch_minimax.py /root/ComfyUI \
-    && python3 -c 'import importlib.util; p="/root/ComfyUI/custom_nodes/ai_lora_cache/validate.py"; s=importlib.util.spec_from_file_location("guard",p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.validate("/root/ComfyUI")' \
-    && python3 -m compileall -q /root/ComfyUI/custom_nodes/ai_radiance /root/ComfyUI/custom_nodes/studio_worker
+    && python3 -m compileall -q /root/ComfyUI/custom_nodes/radiance /root/ComfyUI/custom_nodes/studio_worker
 LABEL io.excloo.comfyui.version="$UPSTREAM_REFERENCE"
 LABEL io.excloo.studio.image="$STUDIO_IMAGE"
 WORKDIR /root/ComfyUI

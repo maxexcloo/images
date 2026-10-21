@@ -14,6 +14,9 @@ from collections import deque
 from contextlib import contextmanager
 from pathlib import Path
 
+HOST = "127.0.0.1"
+PORT = 8000
+
 RUNTIME = [
     "/opt/radiance/runtime/ld-linux-x86-64.so.2",
     "--library-path",
@@ -105,11 +108,11 @@ def command(model):
     return [
         *RUNTIME,
         "--host",
-        "127.0.0.1",
+        HOST,
         "--model",
         str(models[model]),
         "--port",
-        "8000",
+        str(PORT),
         "--served-model-name",
         model,
         "--tp",
@@ -126,16 +129,16 @@ def video_command(model):
     # H3 shards across two cards; a single-GPU allocation cannot load it.
     if len(visible_devices()) != 2:
         raise ValueError(
-            "Radiance H3 requires ComfyUI X Video on both GPUs. Select GPU 0,1 in AI Control."
+            "Radiance H3 requires an allocation exposing both GPUs through HIP_VISIBLE_DEVICES."
         )
     return [
         *RUNTIME,
         "--host",
-        "127.0.0.1",
+        HOST,
         "--model",
         str(models[model]),
         "--port",
-        "8000",
+        str(PORT),
         "--served-model-name",
         model,
         "--tp",
@@ -203,7 +206,7 @@ class Worker:
                 )
             try:
                 with urllib.request.urlopen(
-                    "http://127.0.0.1:8000/health", timeout=0.5
+                    f"http://{HOST}:{PORT}/health", timeout=0.5
                 ) as response:
                     if response.status == 200:
                         break
@@ -260,7 +263,7 @@ video_worker = _video_worker.use
 
 
 def stop_worker():
-    """Both workers bind the container's loopback port 8000; at most one runs."""
+    """Both workers share the loopback endpoint; at most one runs."""
     _worker.stop()
     _video_worker.stop()
 
