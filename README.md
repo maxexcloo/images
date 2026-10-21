@@ -10,7 +10,7 @@ and ARM64.
 
 | Image            | Upstream                                                          | Runtime                                                                                                                                                              |
 | ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AI Control       | [maxexcloo/ai](https://github.com/maxexcloo/ai)                   | Standalone GPU allocation web app; mount workload/access configuration and SSH settings                                                                              |
+| AI Control       | [maxexcloo/ai-control](https://github.com/maxexcloo/ai-control)   | Standalone GPU allocation web app; mount workload/access configuration and SSH settings                                                                              |
 | Atvloadly        | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                                                             |
 | BetterBench      | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                                                      |
 | ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | Complete ComfyUI worker with [Radiance](https://codeberg.org/StillDeadcode/radiance), pinned extensions and the matching Studio node; mount models and runtime state |
@@ -125,7 +125,7 @@ CPU tests run with `mise run test:worker`. The image includes its pinned Studio
 node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
 provide models, scratch mounts and environment settings.
 
-AI Control (`ai-control`) still builds from an exact revision of the private AI
-repository. Private source contexts use BuildKit's Git authentication secret;
+AI Control (`ai-control`) builds from an exact revision of the private
+`maxexcloo/ai-control` app repository. Private source contexts use BuildKit's Git authentication secret;
 CI supplies the existing `PUSH_TOKEN`, while local builds use `GIT_AUTH_TOKEN`
 or the signed-in GitHub CLI. Tokens are never build arguments or image layers.
