@@ -122,29 +122,8 @@ not the v0.42.0 release tag. Renovate release updates for ComfyUI are held becau
 the existing stable releases lack those nodes and the Fibo 2 encoder type. The
 worker maintainer should remove the hold after pinning a stable release with
 that support and verifying both generation and editing on Bento.
-Worker extensions are pinned in `comfyui-radiance/sources.json`; its
-CPU tests run with `mise run test:worker`. Local nodes share `custom_nodes/`,
-and all worker tests live in `tests/` within the recipe; tests are excluded from
-the Docker build context. The image includes its pinned Studio
-node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
-provide models, scratch mounts, environment settings and the GPU lease entrypoint.
-
-The local extensions are `cliproxy` and `radiance`. LoRA loading uses the upstream
-ComfyUI and rgthree nodes. ComfyUI caches the last LoRA per loader instance;
-rgthree's Power LoRA Loader creates fresh instances and may reread weights.
-
-CLIProxyAPI discovers advertised Grok image and video models from `/v1/models`,
-cached for one minute. Set `CLIPROXYAPI_URL` and `CLIPROXYAPI_KEY` in the deployment.
-Optional `CLIPROXYAPI_IMAGE_MODEL` and `CLIPROXYAPI_VIDEO_MODEL` select defaults;
-otherwise the first advertised model of each kind is selected alphabetically.
-Defaults must be advertised by that provider. Known request formats and limits
-remain explicit because discovery does not publish their complete schemas. New
-advertised variants use the standard endpoint format and provider resolution
-defaults; an explicit resolution is passed through for the provider to validate.
-Refresh the node's model list after provider changes. Discovery failure leaves
-an empty selector and generation reports the provider error.
-
-Cancelling a CLIProxyAPI job stops local waiting and discards late responses.
-The provider may still finish or bill a submitted job; cancellation never
-resubmits it. The unused seed control is removed, while saved API workflows may
-still send it. Radiance workers share a single loopback endpoint definition.
+Worker extensions are pinned in `comfyui-radiance/sources.json`. Studio owns
+the Studio worker, CLIProxyAPI and Radiance nodes in its `comfyui/` directory,
+and the image copies them from the pinned Studio release, with the Radiance
+runtime and Python dependencies. Deployment hosts provide models, scratch
+mounts, environment settings and the GPU lease entrypoint.
