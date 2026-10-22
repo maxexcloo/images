@@ -2,11 +2,14 @@
 
 import ast
 import hashlib
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "comfyui-radiance"))
 
 from patches.patch_minimax import BEFORE
 from patches.patch_minimax import patch as patch_core
