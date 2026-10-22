@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from patches.patch_minimax import AFTER, BEFORE, LEGACY_AFTER, LEGACY_BEFORE
+from patches.patch_minimax import BEFORE
 from patches.patch_minimax import patch as patch_core
 
 
@@ -38,7 +38,8 @@ class MiniMaxGeometryTests(unittest.TestCase):
             BEFORE
             + "\n\nclass MiniMaxH3ImageToVideo:\n"
             + "    def execute(first_frame, width, height):\n"
-            + LEGACY_BEFORE
+            + "            # geometry anchor: plain stretch to canvas\n"
+            + '            img = _resize(first_frame[:1], width, height, "disabled")'
             + "\n            # follower: aspect-preserving cover-crop\n            return img\n"
         ).encode()
         self.target.write_bytes(self.original)
@@ -100,32 +101,9 @@ class MiniMaxGeometryTests(unittest.TestCase):
                 )
                 self.assertTrue(calls["width"] == width or calls["height"] == height)
 
-    def test_restart_is_idempotent(self):
-        patch_core(self.root)
-        expected = self.target.read_bytes()
-        patch_core(self.root)
-        self.assertEqual(self.target.read_bytes(), expected)
-        self.assertIn(AFTER.encode(), expected)
-
-    def test_prior_centre_crop_patch_upgrades_without_losing_other_source(self):
-        self.target.write_bytes(
-            self.original.replace(LEGACY_BEFORE.encode(), LEGACY_AFTER.encode())
-        )
-        patch_core(self.root)
-        self.assertIn(AFTER.encode(), self.target.read_bytes())
-        self.assertNotIn(LEGACY_AFTER.encode(), self.target.read_bytes())
-        patch_core(self.root)
-
-    def test_changed_upstream_and_changed_patched_file_fail_without_writing(self):
-        patch_core(self.root)
-        patched = self.target.read_bytes()
-        for content in [
-            self.original + b"# upstream change\n",
-            self.original.replace(LEGACY_BEFORE.encode(), LEGACY_AFTER.encode())
-            + b"# upstream change\n",
-            patched + b"# upstream change\n",
-        ]:
-            self.target.write_bytes(content)
-            with self.assertRaisesRegex(RuntimeError, "target changed"):
-                patch_core(self.root)
-            self.assertEqual(self.target.read_bytes(), content)
+    def test_changed_upstream_fails_without_writing(self):
+        content = self.original + b"# upstream change\n"
+        self.target.write_bytes(content)
+        with self.assertRaisesRegex(RuntimeError, "target changed"):
+            patch_core(self.root)
+        self.assertEqual(self.target.read_bytes(), content)

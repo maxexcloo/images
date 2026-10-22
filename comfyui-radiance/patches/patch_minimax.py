@@ -5,10 +5,6 @@ import sys
 from pathlib import Path
 
 UPSTREAM_SHA256 = "108ceff11e5a5c9a34a57bbc380447cf9941beb673a1bd421abc818de54ccd5c"
-LEGACY_BEFORE = """            # geometry anchor: plain stretch to canvas
-            img = _resize(first_frame[:1], width, height, "disabled")"""
-LEGACY_AFTER = """            # Preserve geometry, matching the last-frame cover crop.
-            img = _resize(first_frame[:1], width, height, "center")"""
 BEFORE = """def _resize(image, width, height, crop):
     # image [B, H, W, C] -> [B, height, width, 3]
     samples = image[..., :3].movedim(-1, 1)
@@ -42,23 +38,16 @@ REPLACEMENTS = (
 
 def patch(root):
     target = Path(root) / "comfy_extras/nodes_minimax_h3.py"
-    original = target.read_bytes()
-    upstream = original.replace(LEGACY_AFTER.encode(), LEGACY_BEFORE.encode(), 1)
-    for before, after in REPLACEMENTS:
-        upstream = upstream.replace(after.encode(), before.encode(), 1)
-    if hashlib.sha256(upstream).hexdigest() != UPSTREAM_SHA256:
+    source = target.read_bytes()
+    if hashlib.sha256(source).hexdigest() != UPSTREAM_SHA256:
         raise RuntimeError(
-            "MiniMax geometry patch target changed; review the upstream node before starting ComfyUI"
+            "MiniMax geometry patch target changed; review the upstream node before building"
         )
-    updated = upstream
     for before, after in REPLACEMENTS:
-        if updated.count(before.encode()) != 1:
-            raise RuntimeError(
-                "MiniMax geometry patch target changed; expected one replacement target"
-            )
-        updated = updated.replace(before.encode(), after.encode(), 1)
-    if updated != original:
-        target.write_bytes(updated)
+        if before.encode() not in source:
+            raise RuntimeError(f"MiniMax geometry patch target missing: {before!r}")
+        source = source.replace(before.encode(), after.encode(), 1)
+    target.write_bytes(source)
 
 
 if __name__ == "__main__":

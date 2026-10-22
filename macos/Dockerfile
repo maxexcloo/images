@@ -19,6 +19,7 @@ RUN apt-get update -o APT::Update::Error-Mode=any \
         libxrandr-dev libxss-dev libxtst-dev lld ninja-build pkg-config python3 \
         python3-venv zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
+# The upstream installer needs Git metadata to fetch its vendor/qemu submodule.
 RUN <<'BUILD'
 set -euo pipefail
 git init /src/reims
