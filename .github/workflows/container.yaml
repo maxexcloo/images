@@ -20,6 +20,21 @@ concurrency:
   group: container-${{ github.ref }}
 
 jobs:
+  checks:
+    name: Run Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set Up Shared Tools & Tasks
+        uses: maxexcloo/dotfiles/.github/actions/mise@main
+        with:
+          tools: actionlint node@24 npm:renovate oxfmt python ruff shellcheck uv
+      - name: Run Checks
+        run: mise run check
+
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
@@ -33,12 +48,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Set Up Shared Tools & Tasks
-        uses: maxexcloo/dotfiles/.github/actions/mise@main
-        with:
-          tools: actionlint node@24 npm:renovate oxfmt python ruff shellcheck uv
-      - name: Run Checks
-        run: mise run check
       - id: recipes
         name: Discover Recipes
         env:
@@ -46,19 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           IMAGE_NAME: ${{ inputs.image || 'all' }}
         run: |
-          if [ "$GITHUB_REF" = refs/heads/main ]; then
-            current_revision=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
-            if [ "$GITHUB_SHA" != "$current_revision" ]; then
-              # A skipped push must not become the successful publication baseline.
-              if [ "$GITHUB_EVENT_NAME" = push ]; then
-                echo '::error::Refusing an outdated push run; main has advanced.'
-                exit 1
-              fi
-              echo '::notice::Skipping an outdated manual run; main has advanced.'
-              BASE_REVISION=$GITHUB_SHA
-            fi
-          fi
-          # Pending main runs can be replaced; include every change not yet verified and published.
+          # Cancelled main runs leave changes unpublished; diff against the last successful push.
           if [ "$GITHUB_EVENT_NAME" = push ]; then
             BASE_REVISION=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/container.yaml/runs?branch=$GITHUB_REF_NAME&event=push&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""' || true)
           fi
@@ -97,7 +94,7 @@ jobs:
         with:
           build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
-          cache-to: ${{ matrix.recipe.image != 'comfyui-radiance' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
+          cache-to: ${{ needs.prepare.outputs.publish-enabled == 'true' && matrix.recipe.image != 'comfyui-radiance' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
           platforms: linux/${{ matrix.architecture }}
           provenance: ${{ needs.prepare.outputs.publish-enabled == 'true' && 'mode=max' || 'false' }}
@@ -112,7 +109,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
-            ${{ (matrix.recipe.reference || matrix.recipe.version) && format('org.opencontainers.image.version={0}', matrix.recipe.reference || matrix.recipe.version) || '' }}
+            ${{ matrix.recipe.reference && format('org.opencontainers.image.version={0}', matrix.recipe.reference) || '' }}
       - if: needs.prepare.outputs.publish-enabled == 'true'
         name: Record Digest
         env:
@@ -133,7 +130,7 @@ jobs:
     if: needs.prepare.outputs.publish-enabled == 'true' && needs.prepare.outputs.build-required == 'true'
     name: Publish ${{ matrix.recipe.image }}
     runs-on: ubuntu-latest
-    needs: [prepare, build]
+    needs: [checks, prepare, build]
     permissions:
       packages: write
     strategy:
@@ -184,13 +181,9 @@ jobs:
     if: always()
     name: Check
     runs-on: ubuntu-latest
-    needs: [prepare, build, publish]
+    needs: [checks, prepare, build, publish]
     steps:
-      - name: Verify Build & Publishing Results
-        run: test "$SUCCESS" = true
+      - name: Verify Checks, Builds & Publishing
+        run: test "$FAILED" = false
         env:
-          SUCCESS: >-
-            ${{ needs.prepare.result == 'success' &&
-                (needs.prepare.outputs.build-required == 'true' || needs.prepare.outputs.build-required == 'false') &&
-                needs.build.result == (needs.prepare.outputs.build-required == 'true' && 'success' || 'skipped') &&
-                needs.publish.result == (needs.prepare.outputs.build-required == 'true' && needs.prepare.outputs.publish-enabled == 'true' && 'success' || 'skipped') }}
+          FAILED: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}

@@ -6,12 +6,12 @@ FROM docker.io/yanwk/comfyui-boot:rocm-20261019
 
 ARG STUDIO_IMAGE
 ARG UPSTREAM_REFERENCE
-ENV PIP_USER=false
+ENV PIP_BREAK_SYSTEM_PACKAGES=1 \
+    PIP_USER=false
 COPY --from=radiance /opt/radiance /opt/radiance
 COPY --from=radiance /lib64/ld-linux-x86-64.so.2 /opt/radiance/runtime/ld-linux-x86-64.so.2
 COPY --from=radiance /usr/lib/x86_64-linux-gnu /opt/radiance/runtime/lib
-RUN python3 -c 'import pathlib, sysconfig; pathlib.Path(sysconfig.get_path("stdlib"), "EXTERNALLY-MANAGED").unlink(missing_ok=True)' \
-    && PIP_USER=false python3 -m pip install --no-cache-dir fsspec==2026.9.0 peft==0.21.2 rotary_embedding_torch==0.9.1 \
+RUN python3 -m pip install --no-cache-dir fsspec==2026.9.0 peft==0.21.2 rotary_embedding_torch==0.9.1 \
     && rm -rf /root/ComfyUI
 COPY --from=upstream / /root/ComfyUI/
 COPY worker_image.py /opt/ai/worker_image.py
@@ -22,12 +22,10 @@ COPY custom_nodes/ /root/ComfyUI/custom_nodes/
 COPY --from=studio /app/comfyui/studio_worker /root/ComfyUI/custom_nodes/studio_worker
 COPY patches/ /opt/ai/patches/
 COPY entrypoint.sh /opt/ai/comfyui-entrypoint.sh
-COPY gpu-lease.sh /opt/ai/gpu-lease.sh
 RUN python3 /opt/ai/patches/patch_minimax.py /root/ComfyUI \
     && python3 -m compileall -q /root/ComfyUI/custom_nodes/radiance /root/ComfyUI/custom_nodes/studio_worker
 LABEL io.excloo.comfyui.version="$UPSTREAM_REFERENCE"
 LABEL io.excloo.studio.image="$STUDIO_IMAGE"
 WORKDIR /root/ComfyUI
 EXPOSE 8188
-ENTRYPOINT ["/bin/sh", "/opt/ai/gpu-lease.sh"]
 CMD ["bash", "/opt/ai/comfyui-entrypoint.sh"]

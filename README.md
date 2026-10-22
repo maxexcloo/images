@@ -80,24 +80,20 @@ desktop, so the host doesn't need a desktop or streaming service.
 ## Publishing
 
 Pull requests build changed recipes on their configured architectures without
-publishing. Only changes inside a recipe's build context select that image. Shared
-pipeline and metadata changes run configuration and unit checks without selecting
-unrelated images. Use a manual run to rebuild selected images or every recipe
-after a shared pipeline change. Required checks always report.
+publishing. Only changes inside a recipe's build context select that image;
+shared pipeline and metadata changes run the checks alone. Checks and builds run
+in parallel, and publishing waits for both. Required checks always report.
 
-Publishing runs on the same branch run one at a time. Outdated manual runs on
-`main` skip their builds, and manual runs of the current revision can rebuild
-selected images. Outdated push runs fail before building so they can't move the
-last successful publication forward. If that baseline has been lost from
-rewritten history, every recipe is rebuilt. Runtime changes and manual runs on
-`main` publish verified per-architecture images, then assemble multi-architecture
-manifests. Manual runs take an `image` recipe name or `all`.
+Pushes to `main` rebuild every recipe changed since the last successful push
+run, so cancelled runs don't skip publication, and a delayed run never
+overwrites a newer one. Without that baseline, every recipe is rebuilt. Manual
+runs take an `image` recipe name or `all` and rebuild it on the current
+revision. Verified per-architecture images are then assembled into
+multi-architecture manifests.
 
 Tags include `latest`, `sha-<build-commit>`, the upstream release reference
 (for example `v5.37.0`) for recipes that set one, and `source-<upstream-commit>`
-for recipes that fetch source. Recipes without a reference combine their exact
-base tags instead, final base first, for example `v0.41.0-radiance1.8.1`, and
-Renovate's `loose` versioning orders them. Release tags move when a packaging
+for recipes that fetch source. Release tags move when a packaging
 change rebuilds the same upstream release. Revision labels record the packaging
 commit, and recipes that fetch source record their upstream reference as the
 image version. Published images include provenance and SBOMs. Pin deployed images
@@ -131,7 +127,7 @@ CPU tests run with `mise run test:worker`. Local nodes share `custom_nodes/`,
 and all worker tests live in `tests/` within the recipe; tests are excluded from
 the Docker build context. The image includes its pinned Studio
 node, Radiance runtime, custom nodes and Python dependencies. Deployment hosts
-provide models, scratch mounts and environment settings.
+provide models, scratch mounts, environment settings and the GPU lease entrypoint.
 
 The local extensions are `cliproxy` and `radiance`. LoRA loading uses the upstream
 ComfyUI and rgthree nodes. ComfyUI caches the last LoRA per loader instance;
@@ -152,7 +148,3 @@ Cancelling a CLIProxyAPI job stops local waiting and discards late responses.
 The provider may still finish or bill a submitted job; cancellation never
 resubmits it. The unused seed control is removed, while saved API workflows may
 still send it. Radiance workers share a single loopback endpoint definition.
-
-[AI Control](https://github.com/maxexcloo/ai-control) owns its Docker image and
-publishing workflow in its app repository. It continues to publish
-`ghcr.io/maxexcloo/ai-control` independently of this repository.
