@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG STUDIO_IMAGE=ghcr.io/maxexcloo/studio:0.48.0
+ARG STUDIO_IMAGE=ghcr.io/maxexcloo/studio:0.48.1
 FROM ${STUDIO_IMAGE} AS studio
 FROM docker.io/stilldeadcode/radiance:1.10.0 AS radiance
 FROM docker.io/yanwk/comfyui-boot:rocm-20261019
@@ -18,8 +18,7 @@ COPY worker_image.py /opt/ai/worker_image.py
 COPY sources.json /opt/ai/sources.json
 RUN rm -rf /root/ComfyUI/custom_nodes \
     && python3 /opt/ai/worker_image.py /opt/ai/sources.json /root/ComfyUI
-COPY custom_nodes/ /root/ComfyUI/custom_nodes/
-COPY --from=studio /app/comfyui/studio_worker /root/ComfyUI/custom_nodes/studio_worker
+COPY --from=studio /app/comfyui/ /root/ComfyUI/custom_nodes/
 COPY patches/ /opt/ai/patches/
 COPY entrypoint.sh /opt/ai/comfyui-entrypoint.sh
 RUN python3 /opt/ai/patches/patch_minimax.py /root/ComfyUI \
