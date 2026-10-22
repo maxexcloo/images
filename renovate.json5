@@ -41,6 +41,12 @@
   ],
   packageRules: [
     {
+      allowedVersions: "/^v[0-9]+[.][0-9]+[.][0-9]+$/",
+      description: "Use ComfyUI Radiance source tags rather than historical packaging tags",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/maxexcloo/comfyui-radiance"],
+    },
+    {
       description: "Hold ComfyUI release updates until a stable release includes the pinned Fibo 2 implementation",
       matchDatasources: ["github-releases"],
       matchPackageNames: ["Comfy-Org/ComfyUI"],
