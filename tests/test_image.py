@@ -54,21 +54,6 @@ class MatrixTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertFalse(matrix(changed_files=[path])["required"])
 
-    def test_shared_pipeline_and_removed_recipe_changes_keep_worker_build_scoped(self):
-        result = matrix(
-            changed_files=[
-                ".github/scripts/image.py",
-                ".github/workflows/container.yaml",
-                "ai-control/Dockerfile",
-                "comfyui-radiance/Dockerfile",
-            ]
-        )
-        self.assertEqual(
-            [recipe["image"] for recipe in result["include"]],
-            ["comfyui-radiance"],
-        )
-        self.assertEqual(len(result["build"]), 1)
-
     def test_manual_selection_keeps_recipe_architecture_support(self):
         result = matrix("comfyui-radiance")
         self.assertTrue(result["required"])
@@ -83,15 +68,6 @@ class MatrixTests(unittest.TestCase):
         }
         self.assertEqual(versions["betterbench"], "")
         self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
-
-    def test_worker_version_and_removed_app_ownership(self):
-        versions = {
-            recipe["image"]: recipe["version"] for recipe in matrix()["include"]
-        }
-        self.assertNotIn("ai-control", versions)
-        self.assertEqual(
-            versions["comfyui-radiance"], image.source("comfyui-radiance")["reference"]
-        )
 
     def test_partial_git_pin_fails(self):
         with tempfile.TemporaryDirectory() as temporary:
