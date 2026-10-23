@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM ghcr.io/astral-sh/uv:0.13 AS uv
-FROM python:3.15-slim-trixie AS build
+FROM python:3.15.1-slim-trixie AS build
 
 COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
@@ -11,7 +11,7 @@ RUN uv sync --extra dev --no-editable \
     && .venv/bin/pytest -q \
     && uv sync --locked --no-dev --no-editable
 
-FROM python:3.15-slim-trixie AS runtime
+FROM python:3.15.1-slim-trixie AS runtime
 
 ENV BETTERBENCH_HOME=/data \
     BETTERBENCH_NO_UPDATE_CHECK=1 \
