@@ -32,10 +32,9 @@ configuration and persistent data belong in the deployment repositories.
 Install the [shared Mise configuration](https://github.com/maxexcloo/dotfiles#shared-tools--tasks)
 before running local Mise tasks.
 
-Install the tools and check repository configuration:
+Check repository configuration:
 
 ```sh
-mise install
 mise run check
 ```
 

@@ -12,7 +12,6 @@ on:
         type: string
 
 permissions:
-  actions: read
   contents: read
 
 concurrency:
@@ -38,6 +37,9 @@ jobs:
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
     outputs:
       build-required: ${{ fromJSON(steps.recipes.outputs.matrix).required }}
       matrix: ${{ steps.recipes.outputs.matrix }}
