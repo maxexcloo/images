@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG STUDIO_IMAGE=ghcr.io/maxexcloo/studio:0.48.1
+ARG STUDIO_IMAGE=ghcr.io/maxexcloo/studio:0.49.0
 FROM ${STUDIO_IMAGE} AS studio
 FROM docker.io/stilldeadcode/radiance:1.11.0 AS radiance
 FROM docker.io/yanwk/comfyui-boot:rocm-20261019
