@@ -25,7 +25,9 @@ recipes that fetch source also pin its commit. Builds get these as
 reference picks the matching upstream image tags. Recipes reuse upstream images
 where they exist and only fetch source when they have to. This repository holds
 the packaging, runtime support and local `patches/`. The generic builder in
-`.github/scripts/` finds recipes from their `source.json`. Credentials,
+`.github/scripts/` finds recipes from their `source.json`, where
+`architectures` limits the build platforms and `"cache": false` keeps images
+too large for the GitHub Actions cache from exporting to it. Credentials,
 configuration and persistent data belong in the deployment repositories.
 
 ## Development
