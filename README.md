@@ -2,9 +2,9 @@
 
 Container images for my own infrastructure, built from pinned upstream
 applications. The active builds are Atvloadly, BetterBench, ComfyUI Radiance,
-Gatus/Tailscale, macOS and Redlib, published under `ghcr.io/maxexcloo`.
-ComfyUI Radiance and macOS are AMD64 only; the others support AMD64
-and ARM64.
+Gatus/Tailscale, macOS, Maya ROCm and Redlib, published under
+`ghcr.io/maxexcloo`. ComfyUI Radiance, macOS and Maya ROCm are AMD64 only; the
+others support AMD64 and ARM64.
 
 ## Images
 
@@ -15,6 +15,7 @@ and ARM64.
 | ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | Complete ComfyUI worker with [Radiance](https://codeberg.org/StillDeadcode/radiance), pinned extensions and the matching Studio node; mount models and runtime state |
 | Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                                              |
 | macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                                                 |
+| Maya ROCm        | [mw00/project-maya](https://github.com/mw00/project-maya)         | Maya's GLM-5.3-Flash engine and server for R9700 (`gfx1201`); deployments supply the server config, models, packs and runtime state                                  |
 | Redlib           | [Nachtalb/redlib](https://github.com/Nachtalb/redlib)             | Non-root Reddit frontend on port 8080; built from source for AMD64 and ARM64                                                                                         |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
@@ -66,6 +67,12 @@ compatibility on the target ROCm host before deploying a new base version. The
 pinned core, extensions and Python dependencies are packaged in ComfyUI Radiance;
 deployments supply models and persistent state. Radiance has its own runtime
 libraries inside the same worker image.
+Maya ROCm builds Maya's HIP engine for the R9700 on AMD's ROCm development
+image, with the Python packages and llama.cpp pin from Maya's own installer, so
+dependency versions can change between builds of the same source. Maya's
+shipped GLM hipBLASLt table matches an older hipBLASLt, so the recipe adds one
+tuned on Bento for the base image's version. Retune it with the bundled
+`build-hip/tune_hipblaslt` after a ROCm update. Verify it on Bento.
 Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration. Redlib builds the pinned fork from source
 and runs its offline Rust tests during the build; deployments supply its configuration.
