@@ -96,7 +96,7 @@ jobs:
         with:
           build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
-          cache-to: ${{ needs.prepare.outputs.publish-enabled == 'true' && matrix.recipe.image != 'comfyui-radiance' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
+          cache-to: ${{ needs.prepare.outputs.publish-enabled == 'true' && matrix.recipe.cache && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
           # Architecture images are pushed untagged; Publish tags the merged manifest.
           outputs: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('type=image,name=ghcr.io/maxexcloo/{0},push-by-digest=true,name-canonical=true,push=true', matrix.recipe.image) || '' }}
