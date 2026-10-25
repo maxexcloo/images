@@ -83,6 +83,23 @@ class MatrixTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         image.source("example")
 
+    def test_build_cache_override_is_boolean(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "example").mkdir()
+            source = root / "example" / "source.json"
+            data = {"repository": "owner/project", "reference": "v1.0.0"}
+            with patch("image.ROOT", root):
+                source.write_text(json.dumps(data))
+                self.assertTrue(image.source("example")["cache"])
+                source.write_text(json.dumps({**data, "cache": False}))
+                self.assertFalse(image.source("example")["cache"])
+                for cache in ["false", 1, None]:
+                    with self.subTest(cache=cache):
+                        source.write_text(json.dumps({**data, "cache": cache}))
+                        with self.assertRaises(ValueError):
+                            image.source("example")
+
     def test_unknown_manual_recipe_fails(self):
         with self.assertRaises(ValueError):
             matrix("not-a-recipe")
