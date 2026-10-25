@@ -15,7 +15,7 @@ and ARM64.
 | ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | Complete ComfyUI worker with [Radiance](https://codeberg.org/StillDeadcode/radiance), pinned extensions and the matching Studio node; mount models and runtime state |
 | Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                                              |
 | macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                                                 |
-| Redlib           | [polak14/redlib](https://github.com/polak14/redlib)               | Non-root Reddit frontend on port 8080; built from source for AMD64 and ARM64                                                                                         |
+| Redlib           | [Nachtalb/redlib](https://github.com/Nachtalb/redlib)             | Non-root Reddit frontend on port 8080; built from source for AMD64 and ARM64                                                                                         |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
