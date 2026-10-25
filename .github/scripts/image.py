@@ -47,6 +47,9 @@ def source(name):
         or any(value not in {"amd64", "arm64"} for value in architectures)
     ):
         raise ValueError(f"Invalid architectures for {name}")
+    # Images too large for the GitHub Actions cache opt out of exporting to it.
+    if type(data.setdefault("cache", True)) is not bool:
+        raise ValueError(f"Invalid cache setting for {name}")
     return data
 
 

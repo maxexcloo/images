@@ -2,7 +2,7 @@
 
 ## Build Ownership
 
-- Active recipes have a `source.json`, which owns architecture overrides.
+- Active recipes have a `source.json`, which owns architecture and build cache overrides.
 - Keep application source in its upstream repository.
 - Keep recipe-specific patches and patch helpers in that recipe's `patches/` directory.
 - Prefer suitable upstream container images over custom builds. Keep local recipes and changes to the minimum needed for working deployments.
