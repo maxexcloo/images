@@ -4,17 +4,13 @@ import argparse
 import json
 import re
 import subprocess
+from fnmatch import fnmatch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE = re.compile(r"v?\d+\.\d+\.\d+(?:[-+].*)?")
-# Recipe files that build contexts exclude.
-NON_BUILD_PATHS = {
-    "macos/.gitignore",
-    "macos/README.md",
-    "macos/compose.yaml",
-    "macos/verify-stream.sh",
-}
+# Docker always sends these, and the pin selects the upstream source.
+BUILD_FILES = {".dockerignore", "Dockerfile", "source.json"}
 
 
 def images():
@@ -53,11 +49,25 @@ def source(name):
     return data
 
 
+def build_input(path):
+    name, _, relative = path.partition("/")
+    ignore = ROOT / name / ".dockerignore"
+    if relative in BUILD_FILES or not ignore.exists():
+        return True
+    # The last matching .dockerignore pattern decides, as in Docker.
+    included = True
+    for pattern in ignore.read_text().split():
+        target = pattern.lstrip("!").rstrip("/")
+        if fnmatch(relative, target) or relative.startswith(f"{target}/"):
+            included = pattern.startswith("!")
+    return included
+
+
 def affected_images(names, changed_files):
     # Changes outside image build contexts validate configuration without rebuilding.
-    return {
-        path.split("/", 1)[0] for path in changed_files if path not in NON_BUILD_PATHS
-    } & set(names)
+    return {path.split("/", 1)[0] for path in changed_files if build_input(path)} & set(
+        names
+    )
 
 
 def matrix(image="all", changed_files=None):
