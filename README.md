@@ -117,11 +117,6 @@ packages pinned in Dockerfiles and each `source.json` upstream. Release referenc
 move to the latest GitHub release and its commit, and branch references follow
 the branch's latest commit.
 
-```sh
-mise run dependencies:check
-mise run dependencies:update
-```
-
 The shared image/video worker (`comfyui-radiance`) builds from its local recipe
 context. Its core release and commit are owned by `comfyui-radiance/source.json`;
 the reference supplies the published version tag and ComfyUI version label.
