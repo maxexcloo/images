@@ -23,6 +23,7 @@ class MatrixTests(unittest.TestCase):
                 ".mise.toml",
                 "renovate.json5",
                 "tests/test_image.py",
+                "atvloadly/README.md",
                 "macos/README.md",
                 "macos/compose.yaml",
                 "macos/verify-stream.sh",
@@ -44,6 +45,11 @@ class MatrixTests(unittest.TestCase):
                     {build["architecture"] for build in result["build"]},
                     {"amd64", "arm64"},
                 )
+
+    def test_dockerignore_allowlist_selects_build_inputs(self):
+        for path in ["macos/.dockerignore", "macos/start.sh", "atvloadly/patches/x"]:
+            with self.subTest(path=path):
+                self.assertTrue(matrix(changed_files=[path])["required"])
 
     def test_shared_pipeline_changes_validate_without_rebuilding_images(self):
         for path in [
