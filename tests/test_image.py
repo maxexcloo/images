@@ -61,7 +61,7 @@ class MatrixTests(unittest.TestCase):
                 self.assertFalse(matrix(changed_files=[path])["required"])
 
     def test_manual_selection_keeps_recipe_architecture_support(self):
-        result = matrix("comfyui-radiance")
+        result = matrix("maya-rocm")
         self.assertTrue(result["required"])
         self.assertEqual(
             [build["architecture"] for build in result["build"]], ["amd64"]

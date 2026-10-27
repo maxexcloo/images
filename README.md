@@ -115,16 +115,4 @@ packages pinned in Dockerfiles and each `source.json` upstream. Release referenc
 move to the latest GitHub release and its commit, and branch references follow
 the branch's latest commit.
 
-The shared image/video worker (`comfyui-radiance`) builds from its local recipe
-context. Its core release and commit are owned by `comfyui-radiance/source.json`;
-the reference supplies the published version tag and ComfyUI version label.
-The current v0.42.0 reference pins a feature commit with native Fibo 2 support,
-not the v0.42.0 release tag. Renovate release updates for ComfyUI are held because
-the existing stable releases lack those nodes and the Fibo 2 encoder type. The
-worker maintainer should remove the hold after pinning a stable release with
-that support and verifying both generation and editing on Bento.
-Worker extensions are pinned in `comfyui-radiance/sources.json`. Studio owns
-the Studio worker, CLIProxyAPI and Radiance nodes in its `comfyui/` directory,
-and the image copies them from the pinned Studio release, with the Radiance
-runtime and Python dependencies. Deployment hosts provide models, scratch
-mounts, environment settings and the GPU lease entrypoint.
+The ComfyUI image/video worker is built and published by Studio (`ghcr.io/maxexcloo/studio-worker`).

@@ -4,15 +4,6 @@
   customManagers: [
     {
       customType: "regex",
-      datasourceTemplate: "git-refs",
-      description: "Worker extensions follow their configured upstream branch",
-      managerFilePatterns: ["/^comfyui-radiance/sources\\.json$/"],
-      matchStrings: [
-        '"branch":\\s*"(?<currentValue>[^"]+)",\\s*"path":\\s*"[^"]+",\\s*"revision":\\s*"(?<currentDigest>[a-f0-9]{40})",\\s*"url":\\s*"(?<depName>[^"]+)"',
-      ],
-    },
-    {
-      customType: "regex",
       datasourceTemplate: "github-releases",
       description: "Recipe upstream releases, with the release commit when source is fetched",
       managerFilePatterns: ["/(^|/)source\\.json$/"],
