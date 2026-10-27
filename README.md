@@ -1,21 +1,19 @@
 # Images
 
 Container images for my own infrastructure, built from pinned upstream
-applications. The active builds are Atvloadly, BetterBench, ComfyUI Radiance,
-Gatus/Tailscale, macOS and Maya ROCm, published under `ghcr.io/maxexcloo`.
-ComfyUI Radiance, macOS and Maya ROCm are AMD64 only; the others support AMD64
-and ARM64.
+applications. The active builds are Atvloadly, BetterBench, Gatus/Tailscale,
+macOS and Maya ROCm, published under `ghcr.io/maxexcloo`. macOS and Maya ROCm
+are AMD64 only; the others support AMD64 and ARM64.
 
 ## Images
 
-| Image            | Upstream                                                          | Runtime                                                                                                                                                              |
-| ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Atvloadly        | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                                                             |
-| BetterBench      | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                                                      |
-| ComfyUI Radiance | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)         | Complete ComfyUI worker with [Radiance](https://codeberg.org/StillDeadcode/radiance), pinned extensions and the matching Studio node; mount models and runtime state |
-| Gatus/Tailscale  | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                                                              |
-| macOS            | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                                                 |
-| Maya ROCm        | [mw00/project-maya](https://github.com/mw00/project-maya)         | Maya's GLM-5.3-Flash engine and server for R9700 (`gfx1201`); deployments supply the server config, models, packs and runtime state                                  |
+| Image           | Upstream                                                          | Runtime                                                                                                                             |
+| --------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                            |
+| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                     |
+| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                             |
+| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                |
+| Maya ROCm       | [mw00/project-maya](https://github.com/mw00/project-maya)         | Maya's GLM-5.3-Flash engine and server for R9700 (`gfx1201`); deployments supply the server config, models, packs and runtime state |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
@@ -63,11 +61,6 @@ BetterBench has no upstream container image, so its minimal recipe installs the
 upstream application and runs its tests. Dependency versions can change between
 builds of the same source.
 
-ComfyUI uses a dated upstream ROCm base and its Python installation. Check GPU
-compatibility on the target ROCm host before deploying a new base version. The
-pinned core, extensions and Python dependencies are packaged in ComfyUI Radiance;
-deployments supply models and persistent state. Radiance has its own runtime
-libraries inside the same worker image.
 Maya ROCm builds Maya's HIP engine for the R9700 on AMD's ROCm development
 image, with the Python packages and llama.cpp pin from Maya's own installer, so
 dependency versions can change between builds of the same source. Maya's
@@ -114,5 +107,3 @@ Renovate (`renovate.json5`) opens pull requests for actions, base images, Python
 packages pinned in Dockerfiles and each `source.json` upstream. Release references
 move to the latest GitHub release and its commit, and branch references follow
 the branch's latest commit.
-
-The ComfyUI image/video worker is built and published by Studio (`ghcr.io/maxexcloo/studio-worker`).

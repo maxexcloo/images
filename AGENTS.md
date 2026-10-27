@@ -17,4 +17,4 @@ Keep build behaviour and architecture documented concisely in `README.md`.
 
 ## Verification
 
-Run `mise run fmt` before committing and `mise run check` after recipe, configuration or workflow changes. Local checks validate configuration and build selection without building images. Run `mise run build` after recipe changes to verify supported recipes on the host architecture. Remote CI verifies configured architectures and publishing. Verify ComfyUI ROCm on Bento; ARM64 local builds explicitly skip it. Verify macOS deployments as described in [`macos/README.md`](macos/README.md#verification).
+Run `mise run fmt` before committing and `mise run check` after recipe, configuration or workflow changes. Local checks validate configuration and build selection without building images. Run `mise run build` after recipe changes to verify supported recipes on the host architecture. Remote CI verifies configured architectures and publishing. Verify Maya ROCm on Bento; ARM64 local builds skip it. Verify macOS deployments as described in [`macos/README.md`](macos/README.md#verification).
