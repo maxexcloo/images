@@ -7,13 +7,13 @@ are AMD64 only; the others support AMD64 and ARM64.
 
 ## Images
 
-| Image           | Upstream                                                          | Runtime                                                                                                                             |
-| --------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on localhost port 5533; mount persistent data at `/data`; host networking for LAN discovery                            |
-| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                     |
-| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                             |
-| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                |
-| Maya ROCm       | [mw00/project-maya](https://github.com/mw00/project-maya)         | Maya's GLM-5.3-Flash engine and server for R9700 (`gfx1201`); deployments supply the server config, models, packs and runtime state |
+| Image           | Upstream                                                          | Runtime                                                                                                                               |
+| --------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on port 5533, localhost unless `LISTEN_ADDR` is set; mount persistent data at `/data`; host networking for LAN discovery |
+| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                       |
+| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                               |
+| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
+| Maya ROCm       | [mw00/project-maya](https://github.com/mw00/project-maya)         | Maya's GLM-5.3-Flash engine and server for R9700 (`gfx1201`); deployments supply the server config, models, packs and runtime state   |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
@@ -51,7 +51,8 @@ Build one image by recipe name:
 mise exec -- python .github/scripts/image.py build atvloadly
 ```
 
-Atvloadly includes patches for pairing completion and discovery refresh.
+Atvloadly includes patches for pairing completion, discovery refresh and a
+`LISTEN_ADDR` override for the configured listen address.
 Application dependencies follow upstream, and local patches and overrides fix
 functional problems that have actually shown up. Upstream browser and Go tests run during the build.
 Deploying it needs host networking and `seccomp=unconfined` for the upstream
