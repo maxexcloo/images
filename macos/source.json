@@ -1,6 +1,6 @@
 {
   "reference": "master",
   "repository": "steelbrain/reims-vgpu",
-  "revision": "12765ee8ae50b6f974b7e544a26acc1771ff703d",
+  "revision": "97918140bb63a7dff0f56d053a259e60f70ad7c5",
   "architectures": ["amd64"]
 }
