@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG SELKIES_IMAGE=ghcr.io/selkies-project/selkies/base:2.1.0-debiantrixie
+ARG SELKIES_IMAGE=ghcr.io/selkies-project/selkies/base:2.2.0-debiantrixie
 FROM ${SELKIES_IMAGE} AS build
 USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
