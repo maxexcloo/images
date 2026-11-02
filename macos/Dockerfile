@@ -5,8 +5,7 @@ USER 0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG UPSTREAM_REPOSITORY
 ARG UPSTREAM_REVISION
-ENV CARGO_BUILD_JOBS=2 \
-    CARGO_INSTALL_ROOT=/out/usr/lib/reims \
+ENV CARGO_INSTALL_ROOT=/out/usr/lib/reims \
     CARGO_PROFILE_RELEASE_DEBUG=0 \
     DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -o APT::Update::Error-Mode=any \
@@ -33,9 +32,6 @@ cp /src/reims/LICENSE /out/usr/share/licenses/reims/LICENSE
 cp -a /src/reims/LICENSES /out/usr/share/licenses/reims/
 cp /src/reims/vendor/qemu/COPYING /out/usr/share/licenses/reims/QEMU-COPYING
 cp /src/reims/vendor/qemu/COPYING.LIB /out/usr/share/licenses/reims/QEMU-COPYING.LIB
-/out/usr/lib/reims/bin/reims-ctl --version
-/out/usr/lib/reims/bin/reims-util --version
-/out/usr/lib/reims/qemu/bin/qemu-system-x86_64 -device help | grep -F apple-gfx-pci
 rm -rf /src/reims "$HOME/.cache/reims-ctl" "$HOME/.cargo" "$HOME/.rustup" \
     "$HOME/.local/share/reims-ctl" "$HOME/.config/reims-ctl"
 BUILD

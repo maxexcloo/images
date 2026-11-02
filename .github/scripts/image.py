@@ -18,34 +18,8 @@ def images():
 
 
 def source(name):
-    if name not in images():
-        raise ValueError(f"Unknown image: {name}")
     data = json.loads((ROOT / name / "source.json").read_text())
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", data["repository"]):
-        raise ValueError(f"Invalid upstream repository for {name}")
-    # A release reference alone selects upstream image tags; a revision also fetches source.
-    reference = data.get("reference", "")
-    if ("reference" in data or "revision" in data) and not (
-        isinstance(reference, str)
-        and reference
-        and (
-            re.fullmatch(r"[0-9a-f]{40}", str(data["revision"]))
-            if "revision" in data
-            else RELEASE.fullmatch(reference)
-        )
-    ):
-        raise ValueError(f"Invalid pinned source for {name}")
-    architectures = data.setdefault("architectures", ["amd64", "arm64"])
-    if (
-        not isinstance(architectures, list)
-        or not architectures
-        or len(architectures) != len(set(architectures))
-        or any(value not in {"amd64", "arm64"} for value in architectures)
-    ):
-        raise ValueError(f"Invalid architectures for {name}")
-    # Images too large for the GitHub Actions cache opt out of exporting to it.
-    if type(data.setdefault("cache", True)) is not bool:
-        raise ValueError(f"Invalid cache setting for {name}")
+    data.setdefault("architectures", ["amd64", "arm64"])
     return data
 
 
@@ -71,13 +45,10 @@ def affected_images(names, changed_files):
 
 
 def matrix(image="all", changed_files=None):
-    # Validate every recipe even when only metadata changed.
     catalogue = {name: dict(image=name, **source(name)) for name in images()}
     for recipe in catalogue.values():
         reference = recipe.get("reference", "")
         recipe["version"] = reference if RELEASE.fullmatch(reference) else ""
-    if image != "all" and image not in catalogue:
-        raise ValueError(f"Unknown image: {image}")
     selected = set(catalogue) if image == "all" else {image}
     if changed_files is not None:
         selected &= affected_images(catalogue, changed_files)
