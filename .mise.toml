@@ -14,6 +14,3 @@ depends = [
   "check:whitespace",
   "test:python",
 ]
-
-[tasks.fmt]
-depends = ["fmt:mise", "fmt:oxfmt", "fmt:python"]
