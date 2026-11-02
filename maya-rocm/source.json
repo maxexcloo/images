@@ -1,7 +1,7 @@
 {
-  "reference": "v1.1.48",
+  "reference": "v1.1.49",
   "repository": "mw00/project-maya",
-  "revision": "465a981579ff5e91b19ff023721c6661f3c6030b",
+  "revision": "26aacb6bcea9333e4f408a68ee60c4c1c316bd68",
   "architectures": ["amd64"],
   "cache": false
 }
