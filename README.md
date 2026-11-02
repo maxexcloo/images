@@ -1,9 +1,9 @@
 # Images
 
 Container images for my own infrastructure, built from pinned upstream
-applications. The active builds are Atvloadly, BetterBench, Gatus/Tailscale,
-macOS and Maya ROCm, published under `ghcr.io/maxexcloo`. macOS and Maya ROCm
-are AMD64 only; the others support AMD64 and ARM64.
+applications. The active builds are Atvloadly, BetterBench, Gatus/Tailscale and
+macOS, published under `ghcr.io/maxexcloo`. macOS is AMD64 only; the others
+support AMD64 and ARM64.
 
 ## Images
 
@@ -13,7 +13,6 @@ are AMD64 only; the others support AMD64 and ARM64.
 | BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                       |
 | Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                               |
 | macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
-| Maya ROCm       | [mw00/project-maya](https://github.com/mw00/project-maya)         | Maya's GLM-5.3-Flash engine and server for R9700 (`gfx1201`); deployments supply the server config, models, packs and runtime state   |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
@@ -62,12 +61,6 @@ BetterBench has no upstream container image, so its minimal recipe installs the
 upstream application and runs its tests. Dependency versions can change between
 builds of the same source.
 
-Maya ROCm builds Maya's HIP engine for the R9700 on AMD's ROCm development
-image, with the Python packages and llama.cpp pin from Maya's own installer, so
-dependency versions can change between builds of the same source. Maya's
-shipped GLM hipBLASLt table matches an older hipBLASLt, so the recipe adds one
-tuned on Bento for the base image's version. Retune it with the bundled
-`build-hip/tune_hipblaslt` after a ROCm update. Verify it on Bento.
 Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration.
 
