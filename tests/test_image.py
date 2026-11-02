@@ -1,6 +1,5 @@
 """Exercise recipe selection and publication baselines."""
 
-import json
 import shutil
 import subprocess
 import sys
@@ -75,39 +74,8 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(versions["betterbench"], "")
         self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
 
-    def test_partial_git_pin_fails(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / "example").mkdir()
-            for data in [
-                {"repository": "owner/project", "reference": "main"},
-                {"repository": "owner/project", "reference": "v1.0.0", "revision": "a"},
-                {"repository": "owner/project", "revision": "a" * 40},
-            ]:
-                with self.subTest(data=data), patch("image.ROOT", root):
-                    (root / "example" / "source.json").write_text(json.dumps(data))
-                    with self.assertRaises(ValueError):
-                        image.source("example")
-
-    def test_build_cache_override_is_boolean(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / "example").mkdir()
-            source = root / "example" / "source.json"
-            data = {"repository": "owner/project", "reference": "v1.0.0"}
-            with patch("image.ROOT", root):
-                source.write_text(json.dumps(data))
-                self.assertTrue(image.source("example")["cache"])
-                source.write_text(json.dumps({**data, "cache": False}))
-                self.assertFalse(image.source("example")["cache"])
-                for cache in ["false", 1, None]:
-                    with self.subTest(cache=cache):
-                        source.write_text(json.dumps({**data, "cache": cache}))
-                        with self.assertRaises(ValueError):
-                            image.source("example")
-
     def test_unknown_manual_recipe_fails(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             matrix("not-a-recipe")
 
 

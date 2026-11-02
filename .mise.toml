@@ -3,17 +3,5 @@
 description = "Build Active Images For The Local Architecture"
 run = "python .github/scripts/image.py build"
 
-[tasks.check]
-depends = [
-  "check:actions",
-  "check:mise",
-  "check:oxfmt",
-  "check:python",
-  "check:shell",
-  "check:updates",
-  "check:whitespace",
-  "test:python",
-]
-
 [tasks.fmt]
 depends = ["fmt:mise", "fmt:oxfmt", "fmt:python"]

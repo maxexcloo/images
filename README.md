@@ -22,9 +22,8 @@ reference picks the matching upstream image tags. Recipes reuse upstream images
 where they exist and only fetch source when they have to. This repository holds
 the packaging, runtime support and local `patches/`. The generic builder in
 `.github/scripts/` finds recipes from their `source.json`, where
-`architectures` limits the build platforms and `"cache": false` keeps images
-too large for the GitHub Actions cache from exporting to it. Credentials,
-configuration and persistent data belong in the deployment repositories.
+`architectures` limits the build platforms. Credentials, configuration and
+persistent data belong in the deployment repositories.
 
 ## Development
 
@@ -51,11 +50,11 @@ mise exec -- python .github/scripts/image.py build atvloadly
 ```
 
 Atvloadly includes patches for pairing completion, discovery refresh and a
-`LISTEN_ADDR` override for the configured listen address.
-Application dependencies follow upstream, and local patches and overrides fix
-functional problems that have actually shown up. Upstream browser and Go tests run during the build.
-Deploying it needs host networking and `seccomp=unconfined` for the upstream
-signing tools.
+`LISTEN_ADDR` override for the configured listen address. Application
+dependencies follow upstream, and local patches and overrides fix functional
+problems that have actually shown up. Upstream browser and Go tests run during
+the build. Deploying Atvloadly needs host networking and `seccomp=unconfined`
+for the upstream signing tools.
 
 BetterBench has no upstream container image, so its minimal recipe installs the
 upstream application and runs its tests. Dependency versions can change between
