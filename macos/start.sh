@@ -8,10 +8,7 @@ if [ -n "${SELKIES_BASIC_AUTH_PASSWORD_FILE:-}" ]; then
     export SELKIES_BASIC_AUTH_PASSWORD
     SELKIES_BASIC_AUTH_PASSWORD=$(cat "$SELKIES_BASIC_AUTH_PASSWORD_FILE")
 fi
-password=${SELKIES_BASIC_AUTH_PASSWORD:-}
-[ -n "$password" ] && [ "$password" != mypasswd ] || fail 'Set SELKIES_BASIC_AUTH_PASSWORD_FILE or SELKIES_BASIC_AUTH_PASSWORD for browser access.'
-export SELKIES_BASIC_AUTH_PASSWORD="$password"
-unset password
+[ -n "${SELKIES_BASIC_AUTH_PASSWORD:-}" ] && [ "$SELKIES_BASIC_AUTH_PASSWORD" != mypasswd ] || fail 'Set SELKIES_BASIC_AUTH_PASSWORD_FILE or SELKIES_BASIC_AUTH_PASSWORD for browser access.'
 [ -c /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] || fail 'Expose a working /dev/kvm from an AMD64 Linux host with virtualisation enabled.'
 compgen -G '/dev/dri/renderD*' >/dev/null || fail 'Expose a Vulkan-capable host GPU through /dev/dri.'
 
