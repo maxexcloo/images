@@ -7,18 +7,25 @@ QEMU's native PipeWire backend.
 
 ## Run
 
-Images are built and published on GitHub. Use the Compose example with a
-published GHCR image, ideally pinned by its `sha-` tag. Create a browser password
-file, then start it:
+Images are built and published on GitHub. Run a published GHCR image, ideally
+pinned by its `sha-` tag. Create a browser password file, then start it:
 
 ```sh
 cd macos
 (umask 077; openssl rand -base64 32 > browser-password)
-docker compose up -d
+docker run --detach --name macos --restart unless-stopped \
+  --shm-size 2g --stop-timeout 120 \
+  --device /dev/dri --device /dev/kvm --device /dev/udmabuf \
+  --env SELKIES_BASIC_AUTH_PASSWORD_FILE=/run/secrets/browser-password \
+  --publish 127.0.0.1:8080:8080 \
+  --volume "$PWD/browser-password:/run/secrets/browser-password:ro" \
+  --volume macos:/storage \
+  ghcr.io/maxexcloo/macos:latest
 ```
 
 Open <https://localhost:8080> and sign in as `ubuntu` with that password. For remote
-access, set `MACOS_LISTEN_ADDRESS` to the host's configured private address.
+access, publish the port on the host's configured private address instead of
+`127.0.0.1`.
 HTTPS gives the browser the secure context WebCodecs needs. Selkies uses a
 self-signed certificate by default. A reverse proxy can provide a trusted
 certificate and set `SELKIES_ENABLE_HTTPS=false` on its private upstream.
@@ -48,12 +55,13 @@ to its mapped device groups but doesn't change host drivers, modules or sysctls.
 Reims' host kernel and `vm.max_map_count` requirements still apply.
 
 macOS needs monotonic guest time. On hosts with an unstable TSC, you can avoid an
-early `Non-monotonic time` panic with `CPU_CORES=1` and a Compose `cpuset` limited
+early `Non-monotonic time` panic with `CPU_CORES=1` and `--cpuset-cpus` limited
 to the sibling threads of one physical core. It costs CPU throughput.
 
-On Linux-based TrueNAS, Docker Apps can use the Compose example through
-**Apps → Install Via YAML**. Bind a writable dataset to `/storage`, mount the
-browser password as a secret and bind port 8080 to the NAS's private address.
+On Linux-based TrueNAS, install it as a custom Docker App with the same devices,
+shared memory and environment. Bind a writable dataset to `/storage`, mount the
+browser password file read-only at `/run/secrets/browser-password` and bind port
+8080 to the NAS's private address.
 Keep the two-minute stop grace period, because upstream `reims-ctl` asks the guest
 to shut down before powering off. User-mode networking doesn't need
 `/dev/net/tun` or `NET_ADMIN`.
