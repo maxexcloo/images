@@ -7,8 +7,8 @@ QEMU's native PipeWire backend.
 
 ## Run
 
-Images are built and published on GitHub. Run a published GHCR image, ideally
-pinned by its `sha-` tag. Create a browser password file, then start it:
+Run a published GHCR image, ideally pinned by its `sha-` tag. Create a browser
+password file, then start it:
 
 ```sh
 cd macos
@@ -69,12 +69,10 @@ to shut down before powering off. User-mode networking doesn't need
 ## Display & Performance
 
 The pinned upstream installer builds Reims, its matching QEMU and `reims-ctl`.
-The toolchain, QEMU revision and helper dependencies are left to upstream. Reims'
-borderless SDL window presents through Vulkan into Selkies' desktop. Selkies uses
-the mapped GPU for rendering and encoding, and hardware encoding needs a
-supported codec and driver. This skips the VNC encode, transport and decode step.
-Frame copying, codec choice and latency still need checking on the deployment
-GPU; zero-copy streaming isn't guaranteed.
+The toolchain, QEMU revision and helper dependencies are left to upstream.
+Selkies uses the mapped GPU for rendering and encoding, and hardware encoding
+needs a supported codec and driver. Frame copying, codec choice and latency still
+need checking on the deployment GPU; zero-copy streaming isn't guaranteed.
 
 Input goes straight to the native window, and PipeWire carries guest audio into
 the stream. WebSocket streaming uses the single HTTPS port without TURN.

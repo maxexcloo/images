@@ -64,10 +64,7 @@ Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration.
 
 The [macOS recipe](macos/README.md) documents running it on Linux and as a
-TrueNAS Docker App. It needs host KVM and GPU access, downloads macOS at runtime
-and keeps installation state outside the image. Both build stages share one
-versioned Selkies base pin. Reims' native window renders into Selkies' GPU-backed
-desktop, so the host doesn't need a desktop or streaming service.
+TrueNAS Docker App.
 
 ## Publishing
 
