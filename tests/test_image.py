@@ -24,7 +24,6 @@ class MatrixTests(unittest.TestCase):
                 "tests/test_image.py",
                 "atvloadly/README.md",
                 "macos/README.md",
-                "macos/compose.yaml",
                 "macos/verify-stream.sh",
             ]
         )
