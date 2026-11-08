@@ -1,18 +1,19 @@
 # Images
 
 Container images for my own infrastructure, built from pinned upstream
-applications. The active builds are Atvloadly, BetterBench, Gatus/Tailscale and
-macOS, published under `ghcr.io/maxexcloo`. macOS is AMD64 only; the others
+applications. The active builds are Atvloadly, BetterBench, Gatus/Tailscale,
+macOS and TRCC, published under `ghcr.io/maxexcloo`. macOS is AMD64 only; the others
 support AMD64 and ARM64.
 
 ## Images
 
-| Image           | Upstream                                                          | Runtime                                                                                                                               |
-| --------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)         | Root service on port 5533, localhost unless `LISTEN_ADDR` is set; mount persistent data at `/data`; host networking for LAN discovery |
-| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)         | Non-root CLI; mount writable results at `/data`                                                                                       |
-| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                       | Reusable binaries; deployments add monitoring configuration and startup                                                               |
-| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu) | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
+| Image           | Upstream                                                                                    | Runtime                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Atvloadly       | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)                                   | Root service on port 5533, localhost unless `LISTEN_ADDR` is set; mount persistent data at `/data`; host networking for LAN discovery |
+| BetterBench     | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)                                   | Non-root CLI; mount writable results at `/data`                                                                                       |
+| Gatus/Tailscale | [twin/gatus](https://github.com/twin/gatus)                                                 | Reusable binaries; deployments add monitoring configuration and startup                                                               |
+| macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu)                           | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
+| TRCC            | [Lexonight1/thermalright-trcc-linux](https://github.com/Lexonight1/thermalright-trcc-linux) | Headless cooler daemon; mount writable `/data`, host `/sys` read-only and `/dev/bus/usb` with device access                           |
 
 Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
 Recipes built from an upstream release or source set its reference once, and
@@ -62,6 +63,11 @@ builds of the same source.
 
 Gatus/Tailscale combines binaries from upstream images, and deployments add the
 startup and monitoring configuration.
+
+TRCC installs the pinned upstream release and runs its LED protocol and settings
+tests during the build. It runs `trcc daemon` with offscreen Qt; configuration
+lives at `/data/.trcc/trcc.json`. Deployment configuration owns device preferences
+and USB access. No packages are installed at startup.
 
 The [macOS recipe](macos/README.md) documents running it on Linux and as a
 TrueNAS Docker App.
