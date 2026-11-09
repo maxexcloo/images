@@ -54,7 +54,7 @@ changed recipes after checks and builds pass. To rebuild manually, run the
 to a recipe name or `all`.
 
 Tags include `latest`, `sha-<build-commit>`, the upstream release reference
-(for example `v5.37.0`) for recipes that set one, and `source-<upstream-commit>`
+(for example `v1.2.3`) for recipes that set one, and `source-<upstream-commit>`
 for recipes that fetch source. Release tags move when a packaging
 change rebuilds the same upstream release. Pin deployed images by release or
 `sha-` tag. Published images include provenance and SBOMs.
