@@ -1,9 +1,7 @@
 # Images
 
 Container images for my own infrastructure, built from pinned upstream
-applications. The active builds are Atvloadly, BetterBench, Gatus/Tailscale,
-macOS and TRCC, published under `ghcr.io/maxexcloo`. macOS is AMD64 only; the others
-support AMD64 and ARM64.
+applications and published under `ghcr.io/maxexcloo`.
 
 ## Images
 
@@ -15,16 +13,15 @@ support AMD64 and ARM64.
 | macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu)                           | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
 | TRCC            | [Lexonight1/thermalright-trcc-linux](https://github.com/Lexonight1/thermalright-trcc-linux) | Headless cooler daemon; mount writable `/data`, host `/sys` read-only and `/dev/bus/usb` with device access                           |
 
-Each recipe has a Dockerfile and a `source.json` naming the upstream repository.
-Recipes built from an upstream release or source set its reference once, and
-recipes that fetch source also pin its commit. Builds get these as
-`UPSTREAM_REPOSITORY`, `UPSTREAM_REFERENCE` and `UPSTREAM_REVISION`, and the
-reference picks the matching upstream image tags. Recipes reuse upstream images
-where they exist and only fetch source when they have to. This repository holds
-the packaging, runtime support and local `patches/`. The generic builder in
-`.github/scripts/` finds recipes from their `source.json`, where
-`architectures` limits the build platforms. Credentials, configuration and
-persistent data belong in the deployment repositories.
+Each recipe's `source.json` identifies its upstream source and any architecture
+restrictions. This repository owns packaging and runtime support; deployment
+repositories own credentials, configuration and persistent data.
+
+Atvloadly also needs `seccomp=unconfined` for the upstream signing tools.
+TRCC stores its configuration at `/data/.trcc/trcc.json`; deployments own device
+preferences and USB access.
+
+The [macOS guide](macos/README.md) covers Linux and TrueNAS setup.
 
 ## Development
 
@@ -50,56 +47,18 @@ Build one image by recipe name:
 mise exec -- python .github/scripts/image.py build atvloadly
 ```
 
-Atvloadly includes patches for pairing completion, discovery refresh and a
-`LISTEN_ADDR` override for the configured listen address. Application
-dependencies follow upstream, and local patches and overrides fix functional
-problems that have actually shown up. Upstream browser and Go tests run during
-the build. Deploying Atvloadly needs host networking and `seccomp=unconfined`
-for the upstream signing tools.
-
-BetterBench has no upstream container image, so its minimal recipe installs the
-upstream application and runs its tests. Dependency versions can change between
-builds of the same source.
-
-Gatus/Tailscale combines binaries from upstream images, and deployments add the
-startup and monitoring configuration.
-
-TRCC installs the pinned upstream release and runs its LED protocol and settings
-tests during the build. It runs `trcc daemon` with offscreen Qt; configuration
-lives at `/data/.trcc/trcc.json`. Deployment configuration owns device preferences
-and USB access. No packages are installed at startup.
-
-The [macOS recipe](macos/README.md) documents running it on Linux and as a
-TrueNAS Docker App.
-
 ## Publishing
 
-Pull requests build changed recipes on their configured architectures without
-publishing. Only changes inside a recipe's build context select that image;
-shared pipeline and metadata changes run the checks alone. Checks and builds run
-in parallel, and publishing waits for both. Required checks always report.
-
-Pushes to `main` rebuild every recipe changed since the last successful push
-run, so cancelled runs don't skip publication, and a delayed run never
-overwrites a newer one. Without that baseline, every recipe is rebuilt. Manual
-runs take an `image` recipe name or `all` and rebuild it on the current
-revision. Verified per-architecture images are then assembled into
-multi-architecture manifests.
+Pull requests build changed recipes without publishing. Pushes to `main` publish
+changed recipes after checks and builds pass. To rebuild manually, run the
+[Container workflow](.github/workflows/container.yaml) on `main` with `image` set
+to a recipe name or `all`.
 
 Tags include `latest`, `sha-<build-commit>`, the upstream release reference
 (for example `v5.37.0`) for recipes that set one, and `source-<upstream-commit>`
 for recipes that fetch source. Release tags move when a packaging
-change rebuilds the same upstream release. Revision labels record the packaging
-commit, and recipes that fetch source record their upstream reference as the
-image version. Published images include provenance and SBOMs. Pin deployed images
-by release or `sha-` tag.
+change rebuilds the same upstream release. Pin deployed images by release or
+`sha-` tag. Published images include provenance and SBOMs.
 
 The repository needs Write access under **Settings → Manage Actions Access** for
 each existing GHCR package. Publishing uses `GITHUB_TOKEN`.
-
-## Dependencies
-
-Renovate (`renovate.json5`) opens pull requests for actions, base images, Python
-packages pinned in Dockerfiles and each `source.json` upstream. Release references
-move to the latest GitHub release and its commit, and branch references follow
-the branch's latest commit.
