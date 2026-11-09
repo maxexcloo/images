@@ -18,8 +18,7 @@ restrictions. This repository owns packaging and runtime support; deployment
 repositories own credentials, configuration and persistent data.
 
 Atvloadly also needs `seccomp=unconfined` for the upstream signing tools.
-TRCC stores its configuration at `/data/.trcc/trcc.json`; deployments own device
-preferences and USB access.
+TRCC stores its configuration at `/data/.trcc/trcc.json`.
 
 The [macOS guide](macos/README.md) covers Linux and TrueNAS setup.
 
