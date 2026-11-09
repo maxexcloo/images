@@ -4,8 +4,8 @@ An AMD64 macOS VM with Reims graphics, streamed to the browser with Selkies.
 
 ## Run
 
-Run a published GHCR image, ideally pinned by its `sha-` tag. Create a browser
-password file, then start it:
+Run a published GHCR image pinned by its `sha-` tag, replacing `COMMIT` with the
+build commit. Create a browser password file, then start it:
 
 ```sh
 cd macos
@@ -17,7 +17,7 @@ docker run --detach --name macos --restart unless-stopped \
   --publish 127.0.0.1:8080:8080 \
   --volume "$PWD/browser-password:/run/secrets/browser-password:ro" \
   --volume macos:/storage \
-  ghcr.io/maxexcloo/macos:latest
+  ghcr.io/maxexcloo/macos:sha-COMMIT
 ```
 
 Open <https://localhost:8080> and sign in as `ubuntu` with that password. For remote
