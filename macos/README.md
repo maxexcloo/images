@@ -1,9 +1,6 @@
 # macOS
 
-An AMD64 macOS VM with upstream Reims graphics in a native Vulkan window,
-streamed to the browser with Selkies. QEMU renders straight into Selkies'
-GPU-backed desktop, so there's no VNC server or separate viewer. USB audio uses
-QEMU's native PipeWire backend.
+An AMD64 macOS VM with Reims graphics, streamed to the browser with Selkies.
 
 ## Run
 
@@ -30,29 +27,26 @@ HTTPS gives the browser the secure context WebCodecs needs. Selkies uses a
 self-signed certificate by default. A reverse proxy can provide a trusted
 certificate and set `SELKIES_ENABLE_HTTPS=false` on its private upstream.
 
-`reims-ctl` creates the VM, downloads macOS Recovery from Apple and supplies
-OpenCore and firmware through upstream `reims-util`. The defaults are macOS 26,
-four vCPUs, 4 GiB RAM and a 64 GiB virtual disk. `CPU_CORES`, `RAM_SIZE` and
-`DISK_SIZE` change those values, and `VERSION` picks the Recovery version when
-creating a VM. Changing the disk size or version doesn't recreate an existing VM.
+On first start, the container creates the VM and downloads macOS Recovery from
+Apple. Set `CPU_CORES`, `RAM_SIZE` and `DISK_SIZE` to choose VM resources;
+`VERSION` picks the Recovery version. Changing the disk size or version doesn't
+recreate an existing VM.
 
 Persistent state lives in `/storage/config` and `/storage/reims`. Download
 progress shows in the container log, and guest and graphics logs are under
 `/storage/reims/vms/mac/logs`. Don't share whole QEMU command logs, since they can
 include credentials or machine identity.
 
-The container is healthy when QEMU is running and Selkies' health endpoint
-responds. The first Recovery download can take longer than the health check's
-startup grace period; the container turns healthy once the VM starts. Startup
-waits a limited time for the display and fails if X still isn't available.
+The first Recovery download can outlast the health check's startup grace period;
+the container turns healthy once the VM starts.
 
 ## Host & TrueNAS
 
 Use AMD64 Linux with working KVM, AVX2, a supported Vulkan GPU and enough memory
 for the VM, graphics and streaming. Map `/dev/kvm` and `/dev/dri`. AMD GPUs also
-need `/dev/udmabuf` for guest memory import. The launcher adds the container user
-to its mapped device groups but doesn't change host drivers, modules or sysctls.
-Reims' host kernel and `vm.max_map_count` requirements still apply.
+need `/dev/udmabuf` for guest memory import. Configure host drivers, modules and
+sysctls separately; Reims' host kernel and `vm.max_map_count` requirements still
+apply.
 
 macOS needs monotonic guest time. On hosts with an unstable TSC, you can avoid an
 early `Non-monotonic time` panic with `CPU_CORES=1` and `--cpuset-cpus` limited
@@ -68,11 +62,8 @@ to shut down before powering off. User-mode networking doesn't need
 
 ## Display & Performance
 
-The pinned upstream installer builds Reims, its matching QEMU and `reims-ctl`.
-The toolchain, QEMU revision and helper dependencies are left to upstream.
-Selkies uses the mapped GPU for rendering and encoding, and hardware encoding
-needs a supported codec and driver. Frame copying, codec choice and latency still
-need checking on the deployment GPU; zero-copy streaming isn't guaranteed.
+Hardware encoding needs a supported codec and driver. Check streaming performance
+on the deployment GPU; zero-copy streaming isn't guaranteed.
 
 Input goes straight to the native window, and PipeWire carries guest audio into
 the stream. WebSocket streaming uses the single HTTPS port without TURN.
@@ -86,9 +77,7 @@ healthy container, an encoded frame or an Apple boot logo on its own isn't
 enough. Open Recovery's utilities and check keyboard and pointer input before
 calling it ready. Installing macOS is a separate step.
 
-GitHub builds on native AMD64 and checks the packaged executables and libraries.
-Runtime verification stays manual. From the repository root, run this against the
-live container:
+From the repository root, run this against the live container:
 
 ```sh
 docker exec -i CONTAINER bash < macos/verify-stream.sh
