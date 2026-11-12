@@ -60,15 +60,6 @@ Keep the two-minute stop grace period, because upstream `reims-ctl` asks the gue
 to shut down before powering off. User-mode networking doesn't need
 `/dev/net/tun` or `NET_ADMIN`.
 
-## Display & Performance
-
-Hardware encoding needs a supported codec and driver. Check streaming performance
-on the deployment GPU; zero-copy streaming isn't guaranteed.
-
-Input goes straight to the native window, and PipeWire carries guest audio into
-the stream. WebSocket streaming uses the single HTTPS port without TURN.
-Microphone, camera and guest clipboard integration aren't set up.
-
 ## Verification
 
 A deployment is done when the macOS Recovery desktop is visible and usable on
@@ -84,9 +75,5 @@ docker exec -i CONTAINER bash < macos/verify-stream.sh
 docker cp CONTAINER:/tmp/macos-recovery.png /tmp/macos-recovery.png
 ```
 
-The script checks the live QEMU PID, authentication on the configured backend
-scheme and port, and an H.264 frame, then saves a screenshot to look at. Behind a
-reverse proxy, also check HTTPS and streaming through its external URL. Then use
-the browser to check Recovery's utilities and input. None of this proves Metal
-works correctly in an installed macOS or says anything about streaming
-performance.
+Behind a reverse proxy, also check HTTPS and streaming through its external URL.
+Then use the browser to check Recovery's utilities and input.

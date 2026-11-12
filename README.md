@@ -13,10 +13,6 @@ applications and published under `ghcr.io/maxexcloo`.
 | macOS           | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu)                                          | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
 | TRCC            | [Lexonight1/thermalright-trcc-linux](https://github.com/Lexonight1/thermalright-trcc-linux)                | Headless cooler daemon; mount writable `/data`, host `/sys` read-only and `/dev/bus/usb` with device access                           |
 
-Each recipe's `source.json` identifies its upstream source and any architecture
-restrictions. This repository owns packaging and runtime support; deployment
-repositories own credentials, configuration and persistent data.
-
 Atvloadly also needs `seccomp=unconfined` for the upstream signing tools.
 TRCC stores its configuration at `/data/.trcc/trcc.json`.
 
@@ -48,8 +44,7 @@ mise exec -- python .github/scripts/image.py build atvloadly
 
 ## Publishing
 
-Pull requests build changed recipes without publishing. Pushes to `main` publish
-changed recipes after checks and builds pass. To rebuild manually, run the
+Pushes to `main` publish changed recipes. To rebuild manually, run the
 [Container workflow](.github/workflows/container.yaml) on `main` with `image` set
 to a recipe name or `all`.
 
@@ -57,7 +52,7 @@ Tags include `latest`, `sha-<build-commit>`, the upstream release reference
 (for example `v1.2.3`) for recipes that set one, and `source-<upstream-commit>`
 for recipes that fetch source. Release tags move when a packaging
 change rebuilds the same upstream release. Pin deployed images by release or
-`sha-` tag. Published images include provenance and SBOMs.
+`sha-` tag.
 
 The repository needs Write access under **Settings → Manage Actions Access** for
 each existing GHCR package. Publishing uses `GITHUB_TOKEN`.
