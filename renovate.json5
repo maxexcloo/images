@@ -22,12 +22,5 @@
       ],
       packageNameTemplate: "https://github.com/{{depName}}",
     },
-    {
-      customType: "regex",
-      datasourceTemplate: "pypi",
-      description: "Python packages pinned in Dockerfile commands",
-      managerFilePatterns: ["/(^|/)Dockerfile$/"],
-      matchStrings: ["\\b(?<depName>[\\w.-]+)==(?<currentValue>\\d[\\w.+!-]*)"],
-    },
   ],
 }
