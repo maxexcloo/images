@@ -7,7 +7,7 @@
 - Prefer suitable upstream container images over custom builds. Keep local recipes and changes to the minimum needed for working deployments.
 - Use upstream dependencies when the image works. Add local patches or dependency overrides only to fix demonstrated functional issues, not solely to address vulnerability scan findings.
 - Keep existing GHCR package names.
-- Keep `renovate.json5` managers generic: they discover every recipe's `source.json` pins and Dockerfile Python pins.
+- Keep `renovate.json5` managers generic: they discover every recipe's `source.json` pins.
 
 ## Verification
 
