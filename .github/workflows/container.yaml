@@ -156,9 +156,9 @@ jobs:
       - name: Publish Multi-Architecture Manifest
         env:
           ARCHITECTURES: ${{ join(matrix.recipe.architectures, ' ') }}
+          BUILD_NUMBER: ${{ github.run_number }}
           BUILD_REVISION: ${{ github.sha }}
           IMAGE_NAME: ghcr.io/maxexcloo/${{ matrix.recipe.image }}
-          UPSTREAM_REVISION: ${{ matrix.recipe.revision }}
           UPSTREAM_VERSION: ${{ matrix.recipe.version }}
         run: |
           set --
@@ -166,11 +166,8 @@ jobs:
             digest=$(cat "digests/$architecture")
             set -- "$@" "$IMAGE_NAME@$digest"
           done
-          if [ -n "$UPSTREAM_REVISION" ]; then
-            set -- --tag "$IMAGE_NAME:source-$UPSTREAM_REVISION" "$@"
-          fi
           if [ -n "$UPSTREAM_VERSION" ]; then
-            set -- --tag "$IMAGE_NAME:$UPSTREAM_VERSION" "$@"
+            set -- --tag "$IMAGE_NAME:$UPSTREAM_VERSION-$BUILD_NUMBER" "$@"
           fi
           docker buildx imagetools create \
             --tag "$IMAGE_NAME:latest" \
