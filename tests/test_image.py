@@ -32,12 +32,12 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(result["include"], [])
 
     def test_one_recipe_selects_all_its_architectures(self):
-        for path in ["gatus-tailscale/Dockerfile", "gatus-tailscale/source.json"]:
+        for path in ["trcc/Dockerfile", "trcc/source.json"]:
             with self.subTest(path=path):
                 result = matrix(changed_files=[path])
                 self.assertEqual(
                     [recipe["image"] for recipe in result["include"]],
-                    ["gatus-tailscale"],
+                    ["trcc"],
                 )
                 self.assertEqual(
                     {build["architecture"] for build in result["build"]},
@@ -71,7 +71,7 @@ class MatrixTests(unittest.TestCase):
             recipe["image"]: recipe["version"] for recipe in matrix()["include"]
         }
         self.assertEqual(versions["betterbench"], "")
-        self.assertRegex(versions["gatus-tailscale"], r"^v\d+\.\d+\.\d+$")
+        self.assertRegex(versions["trcc"], r"^v\d+\.\d+\.\d+$")
 
     def test_unknown_manual_recipe_fails(self):
         with self.assertRaises(KeyError):
@@ -117,17 +117,15 @@ class PublicationBaselineTests(unittest.TestCase):
         )
 
     def test_metadata_after_pending_runtime_still_builds_runtime(self):
-        (self.root / "gatus-tailscale" / "Dockerfile").write_text("Changed runtime")
+        (self.root / "trcc" / "Dockerfile").write_text("Changed runtime")
         self.commit()
         (self.root / "README.md").write_text("Later metadata")
         self.commit()
         result = matrix(changed_files=changes_since(self.base))
-        self.assertEqual(
-            [recipe["image"] for recipe in result["include"]], ["gatus-tailscale"]
-        )
+        self.assertEqual([recipe["image"] for recipe in result["include"]], ["trcc"])
 
     def test_delayed_old_run_cannot_overwrite_newer_publication(self):
-        (self.root / "gatus-tailscale" / "Dockerfile").write_text("Newer runtime")
+        (self.root / "trcc" / "Dockerfile").write_text("Newer runtime")
         self.commit()
         published = self.git("rev-parse", "HEAD")
         self.git("checkout", "--quiet", self.base)
