@@ -48,11 +48,9 @@ Pushes to `main` publish changed recipes. To rebuild manually, run the
 [Container workflow](.github/workflows/container.yaml) on `main` with `image` set
 to a recipe name or `all`.
 
-Tags include `latest`, `sha-<build-commit>`, the upstream release reference
-(for example `v1.2.3`) for recipes that set one, and `source-<upstream-commit>`
-for recipes that fetch source. Release tags move when a packaging
-change rebuilds the same upstream release. Pin deployed images by release or
-`sha-` tag.
+Tags include `latest`, `sha-<build-commit>` and, for recipes that set an
+upstream release, `<release>-<workflow-run-number>` (for example `v1.2.3-42`).
+Only `latest` moves. Pin deployed images by release or `sha-` tag.
 
 The repository needs Write access under **Settings → Manage Actions Access** for
 each existing GHCR package. Publishing uses `GITHUB_TOKEN`.
