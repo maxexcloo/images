@@ -70,7 +70,7 @@ class MatrixTests(unittest.TestCase):
         versions = {
             recipe["image"]: recipe["version"] for recipe in matrix()["include"]
         }
-        self.assertEqual(versions["betterbench"], "")
+        self.assertEqual(versions["macos"], "")
         self.assertRegex(versions["trcc"], r"^v\d+\.\d+\.\d+$")
 
     def test_unknown_manual_recipe_fails(self):
