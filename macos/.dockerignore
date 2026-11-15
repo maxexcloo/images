@@ -1,5 +1,4 @@
 **
-!Dockerfile
 !health.sh
 !run-vm.sh
 !start.sh
