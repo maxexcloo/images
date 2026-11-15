@@ -38,7 +38,7 @@ mise run build
 Build one image by recipe name:
 
 ```sh
-mise exec -- python .github/scripts/image.py build atvloadly
+mise run build atvloadly
 ```
 
 ## Publishing
@@ -53,3 +53,7 @@ Only `latest` moves. Pin deployed images by release or `sha-` tag.
 
 The repository needs Write access under **Settings → Manage Actions Access** for
 each existing GHCR package. Publishing uses `GITHUB_TOKEN`.
+
+## Licence
+
+AGPL-3.0 - see [LICENSE](LICENSE).

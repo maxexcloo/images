@@ -15,8 +15,8 @@ import urllib.request
 import aiohttp
 
 context = ssl._create_unverified_context()
-scheme = 'http' if os.environ.get('SELKIES_ENABLE_HTTPS') == 'false' else 'https'
-url = f"{scheme}://127.0.0.1:{os.environ.get('SELKIES_PORT', '8080')}/"
+scheme = 'http' if os.environ['SELKIES_ENABLE_HTTPS'] == 'false' else 'https'
+url = f"{scheme}://127.0.0.1:{os.environ['SELKIES_PORT']}/"
 try:
     urllib.request.urlopen(url, context=context)
 except urllib.error.HTTPError as error:

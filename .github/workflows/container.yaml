@@ -54,7 +54,7 @@ jobs:
       - id: recipes
         name: Discover Recipes
         env:
-          BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_REVISION: ${{ github.event.pull_request.base.sha }}
           GH_TOKEN: ${{ github.token }}
           IMAGE_NAME: ${{ inputs.image || 'all' }}
         run: |
@@ -95,7 +95,7 @@ jobs:
         name: Build & Verify Image
         uses: docker/build-push-action@v7
         with:
-          build-contexts: ${{ matrix.recipe.revision && format('upstream=https://github.com/{0}.git#{1}', matrix.recipe.repository, matrix.recipe.revision) || '' }}
+          build-contexts: upstream=https://github.com/${{ matrix.recipe.repository }}.git#${{ matrix.recipe.revision }}
           cache-from: type=gha,scope=${{ matrix.recipe.image }}-${{ matrix.architecture }}
           cache-to: ${{ needs.prepare.outputs.publish-enabled == 'true' && format('type=gha,mode=max,scope={0}-{1},ignore-error=true', matrix.recipe.image, matrix.architecture) || '' }}
           context: ./${{ matrix.recipe.image }}
@@ -112,7 +112,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ matrix.recipe.repository }}
-            ${{ matrix.recipe.reference && format('org.opencontainers.image.version={0}', matrix.recipe.reference) || '' }}
+            ${{ matrix.recipe.version && format('org.opencontainers.image.version={0}', matrix.recipe.version) || '' }}
       - if: needs.prepare.outputs.publish-enabled == 'true'
         name: Record Digest
         env:
@@ -130,7 +130,7 @@ jobs:
           retention-days: 1
 
   publish:
-    if: needs.prepare.outputs.publish-enabled == 'true' && needs.prepare.outputs.build-required == 'true'
+    if: needs.prepare.outputs.publish-enabled == 'true'
     name: Publish ${{ matrix.recipe.image }}
     runs-on: ubuntu-latest
     needs: [checks, prepare, build]
