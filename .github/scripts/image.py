@@ -47,8 +47,9 @@ def affected_images(names, changed_files):
 def matrix(image="all", changed_files=None):
     catalogue = {name: dict(image=name, **source(name)) for name in images()}
     for recipe in catalogue.values():
-        reference = recipe.get("reference", "")
-        recipe["version"] = reference if RELEASE.fullmatch(reference) else ""
+        recipe["version"] = (
+            recipe["reference"] if RELEASE.fullmatch(recipe["reference"]) else ""
+        )
     selected = set(catalogue) if image == "all" else {image}
     if changed_files is not None:
         selected &= affected_images(catalogue, changed_files)
@@ -65,7 +66,7 @@ def matrix(image="all", changed_files=None):
 
 
 def changes_since(revision):
-    if not revision or revision == "0" * 40:
+    if not revision:
         return None
     # A baseline lost to rewritten history cannot limit the rebuild.
     if (
@@ -119,26 +120,27 @@ def main():
                 )
                 continue
             raise ValueError(f"{name} does not support {platform}")
-        command = [
-            "docker",
-            "buildx",
-            "build",
-            "--build-arg",
-            f"UPSTREAM_REPOSITORY={data['repository']}",
-        ]
-        if "reference" in data:
-            command.extend(["--build-arg", f"UPSTREAM_REFERENCE={data['reference']}"])
-        if "revision" in data:
-            command.extend(
-                [
-                    "--build-arg",
-                    f"UPSTREAM_REVISION={data['revision']}",
-                    "--build-context",
-                    f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
-                ]
-            )
-        command.extend(["--load", "--tag", f"images-{name}:test", name])
-        subprocess.run(command, check=True, cwd=ROOT)
+        subprocess.run(
+            [
+                "docker",
+                "buildx",
+                "build",
+                "--build-arg",
+                f"UPSTREAM_REFERENCE={data['reference']}",
+                "--build-arg",
+                f"UPSTREAM_REPOSITORY={data['repository']}",
+                "--build-arg",
+                f"UPSTREAM_REVISION={data['revision']}",
+                "--build-context",
+                f"upstream=https://github.com/{data['repository']}.git#{data['revision']}",
+                "--load",
+                "--tag",
+                f"images-{name}:test",
+                name,
+            ],
+            check=True,
+            cwd=ROOT,
+        )
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ stop() {
 trap 'stop; exit 0' TERM INT
 trap stop EXIT
 
-if [ "${SELKIES_WAYLAND:-false}" != true ]; then
+if [ "$SELKIES_WAYLAND" != true ]; then
     for attempt in {1..120}; do
         if timeout 2 xdpyinfo >/dev/null 2>&1; then break; fi
         [ "$attempt" != 120 ] || { printf 'macOS: X display did not become ready.\n' >&2; exit 1; }
@@ -39,5 +39,5 @@ reims-ctl start mac
 started=1
 pid=$(cat "$REIMS_CTL_DATA_DIR/vms/mac/qemu.pid")
 while kill -0 "$pid" 2>/dev/null; do sleep 1; done
-printf 'macOS: QEMU exited; check the VM logs in /storage/reims/vms/mac/logs.\n' >&2
+printf 'macOS: QEMU exited; check the VM logs in %s.\n' "$REIMS_CTL_DATA_DIR/vms/mac/logs" >&2
 exit 1
