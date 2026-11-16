@@ -9,6 +9,7 @@ applications and published under `ghcr.io/maxexcloo`.
 | ----------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Atvloadly   | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly)                                   | Root service on port 5533, localhost unless `LISTEN_ADDR` is set; mount persistent data at `/data`; host networking for LAN discovery |
 | BetterBench | [GGZ14/BetterBench](https://github.com/GGZ14/BetterBench)                                   | Non-root CLI; mount writable results at `/data`                                                                                       |
+| Caddy       | [caddyserver/caddy](https://github.com/caddyserver/caddy)                                   | Official Caddy runtime with the Cloudflare DNS module; mount configuration at `/etc/caddy` and persist `/data` and `/config`          |
 | macOS       | [steelbrain/reims-vgpu](https://github.com/steelbrain/reims-vgpu)                           | AMD64 KVM VM with native Reims graphics and Selkies HTTPS streaming on port 8080; persist `/storage`                                  |
 | TRCC        | [Lexonight1/thermalright-trcc-linux](https://github.com/Lexonight1/thermalright-trcc-linux) | Headless cooler daemon; mount writable `/data`, host `/sys` read-only and `/dev/bus/usb` with device access                           |
 
