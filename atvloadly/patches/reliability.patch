@@ -1,17 +1,17 @@
 diff --git a/internal/manager/device_manager_avahi.go b/internal/manager/device_manager_avahi.go
-index 3f74a67..2641a38 100644
+index 0a4d204..fe11101 100644
 --- a/internal/manager/device_manager_avahi.go
 +++ b/internal/manager/device_manager_avahi.go
-@@ -33,6 +33,8 @@ const (
- // provider dropped a dead D-Bus connection.
- var errAvahiBrowserFreed = errors.New("avahi browser freed")
+@@ -29,6 +29,8 @@ const (
+ 	avahiRestartDelay = 5 * time.Second
+ )
  
 +var errAvahiRefresh = errors.New("avahi discovery refresh")
 +
- // avahiDaemon is the process-wide Avahi connection.
- //
- // go-avahi ties a Server to a D-Bus connection: Server.Close() closes the
-@@ -116,6 +118,9 @@ func (dm *DeviceManager) Start() {
+ // errAvahiBrowserFreed reports that a discovery browser was freed because the
+ // provider dropped a dead D-Bus connection.
+ var errAvahiBrowserFreed = errors.New("avahi browser freed")
+@@ -153,6 +155,9 @@ func (dm *DeviceManager) Start() {
  				log.Info("Avahi discovery stopped")
  				return
  			}
@@ -21,7 +21,7 @@ index 3f74a67..2641a38 100644
  			log.Warnf("Avahi discovery interrupted: %v, restarting in %s", stopped, avahiRestartDelay)
  		}
  
-@@ -183,6 +188,11 @@ func (dm *DeviceManager) runDiscovery(ctx context.Context, server *avahi.Server)
+@@ -220,6 +225,11 @@ func (dm *DeviceManager) runDiscovery(ctx context.Context, server *avahi.Server)
  		return fmt.Errorf("remote manual pairing browser unavailable")
  	}
  
@@ -33,7 +33,7 @@ index 3f74a67..2641a38 100644
  	log.Info("Avahi discovery started...")
  
  	// A closed channel means the browser was freed, which happens when the
-@@ -192,6 +202,8 @@ func (dm *DeviceManager) runDiscovery(ctx context.Context, server *avahi.Server)
+@@ -229,6 +239,8 @@ func (dm *DeviceManager) runDiscovery(ctx context.Context, server *avahi.Server)
  		select {
  		case <-ctx.Done():
  			return nil
@@ -56,7 +56,7 @@ index 2c2ca3d..e6bb259 100644
  }
  
 diff --git a/web/static/src/page/add-device/index.vue b/web/static/src/page/add-device/index.vue
-index 17ba425..1d78165 100644
+index 7e252b0..3d87957 100644
 --- a/web/static/src/page/add-device/index.vue
 +++ b/web/static/src/page/add-device/index.vue
 @@ -231,10 +231,14 @@ export default {

@@ -68,7 +68,7 @@ jobs:
   build:
     if: needs.prepare.outputs.build-required == 'true'
     name: Build ${{ matrix.recipe.image }} (${{ matrix.architecture }})
-    needs: prepare
+    needs: [checks, prepare]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     permissions:
       contents: read
@@ -166,14 +166,23 @@ jobs:
             digest=$(cat "digests/$architecture")
             set -- "$@" "$IMAGE_NAME@$digest"
           done
+          tags=(--tag "$IMAGE_NAME:latest")
+          pins=("$IMAGE_NAME:sha-$BUILD_REVISION")
           if [ -n "$UPSTREAM_VERSION" ]; then
-            set -- --tag "$IMAGE_NAME:$UPSTREAM_VERSION-$BUILD_NUMBER" "$@"
+            pins+=("$IMAGE_NAME:$UPSTREAM_VERSION-$BUILD_NUMBER")
           fi
-          docker buildx imagetools create \
-            --tag "$IMAGE_NAME:latest" \
-            --tag "$IMAGE_NAME:sha-$BUILD_REVISION" \
-            "$@"
-          docker buildx imagetools inspect "$IMAGE_NAME:sha-$BUILD_REVISION"
+          for tag in "${pins[@]}"; do
+            if error=$(docker buildx imagetools inspect --raw "$tag" 2>&1 >/dev/null); then
+              continue
+            fi
+            if [[ "$error" != "ERROR: $tag: not found" ]]; then
+              printf '%s\n' "$error" >&2
+              exit 1
+            fi
+            tags+=(--tag "$tag")
+          done
+          docker buildx imagetools create "${tags[@]}" "$@"
+          docker buildx imagetools inspect "$IMAGE_NAME:latest"
 
   check:
     if: always()
