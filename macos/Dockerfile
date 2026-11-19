@@ -57,7 +57,7 @@ RUN /usr/lib/reims/bin/reims-ctl --version \
     && /usr/lib/reims/bin/reims-util --version \
     && /usr/lib/reims/qemu/bin/qemu-system-x86_64 -device apple-gfx-pci,help >/dev/null \
     && ! ldd /usr/lib/reims/bin/reims-* /usr/lib/reims/qemu/bin/qemu-* | grep 'not found' \
-    && bash -n /usr/local/bin/start-macos /usr/local/lib/macos/*.sh
+    && for script in /usr/local/bin/start-macos /usr/local/lib/macos/*.sh; do bash -n "$script" || exit; done
 ENV CPU_CORES=4 \
     DISK_SIZE=64G \
     RAM_SIZE=4G \
