@@ -11,6 +11,7 @@ import os
 import ssl
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 import aiohttp
 
@@ -23,10 +24,10 @@ except urllib.error.HTTPError as error:
     assert error.code == 401, error.code
 else:
     raise AssertionError('Browser admitted an unauthenticated request')
-password = (open(os.environ['SELKIES_BASIC_AUTH_PASSWORD_FILE']).read().strip()
-            if os.environ.get('SELKIES_BASIC_AUTH_PASSWORD_FILE')
-            else os.environ['SELKIES_BASIC_AUTH_PASSWORD'])
-token = base64.b64encode(('ubuntu:' + password).encode()).decode()
+password_file = os.environ.get('SELKIES_BASIC_AUTH_PASSWORD_FILE')
+password = (Path(password_file).read_bytes().rstrip(b'\n') if password_file
+            else os.environ['SELKIES_BASIC_AUTH_PASSWORD'].encode())
+token = base64.b64encode(b'ubuntu:' + password).decode()
 headers = {'Authorization': 'Basic ' + token}
 with urllib.request.urlopen(urllib.request.Request(url, headers=headers), context=context) as response:
     assert response.status == 200
